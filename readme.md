@@ -26,6 +26,10 @@ Intel Developer Zone.
 * No decompression support.
 * No unit testing.
 
+## License
+
+ISPC Texture Compressor is distributed under the MIT License, which is also known under the name X11 License. The full License is included inside license.txt.
+
 ## Build Instructions
 
 * Windows:
