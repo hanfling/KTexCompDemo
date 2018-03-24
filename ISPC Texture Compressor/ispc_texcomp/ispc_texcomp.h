@@ -17,50 +17,50 @@
 
 struct rgba_surface 
 {
-    uint8_t* ptr;
-    int32_t width;
-    int32_t height;
-    int32_t stride; // in bytes
+	uint8_t* ptr;
+	int32_t width;
+	int32_t height;
+	int32_t stride; // in bytes
 };
 
 struct bc7_enc_settings
 {
-    bool mode_selection[4];
-    int refineIterations[8];
+	bool mode_selection[4];
+	int refineIterations[8];
 
-    bool skip_mode2;
-    int fastSkipTreshold_mode1;
-    int fastSkipTreshold_mode3;
-    int fastSkipTreshold_mode7;
+	bool skip_mode2;
+	int fastSkipTreshold_mode1;
+	int fastSkipTreshold_mode3;
+	int fastSkipTreshold_mode7;
 
-    int mode45_channel0;
-    int refineIterations_channel;
+	int mode45_channel0;
+	int refineIterations_channel;
 
-    int channels;
+	int channels;
 };
 
 struct bc6h_enc_settings
 {
-    bool slow_mode;
-    bool fast_mode;
-    int refineIterations_1p;
-    int refineIterations_2p;
-    int fastSkipTreshold;
+	bool slow_mode;
+	bool fast_mode;
+	int refineIterations_1p;
+	int refineIterations_2p;
+	int fastSkipTreshold;
 };
 
 struct etc_enc_settings
 {
-    int fastSkipTreshold;
+	int fastSkipTreshold;
 };
 
 struct astc_enc_settings
 {
-    int block_width;
-    int block_height;
-    int channels;
+	int block_width;
+	int block_height;
+	int channels;
 
-    int fastSkipTreshold;
-    int refineIterations;
+	int fastSkipTreshold;
+	int refineIterations;
 };
 
 // profiles for RGB data (alpha channel will be ignored)
@@ -97,13 +97,13 @@ extern "C" void ReplicateBorders(rgba_surface* dst_slice, const rgba_surface* sr
 
 /*
 	Notes:
-	  - input width and height need to be a multiple of block size
-      - LDR input is 32 bit/pixel (sRGB), HDR is 64 bit/pixel (half float)
-	  - dst buffer must be allocated with enough space for the compressed texture:
-		4 bytes/block for BC1/ETC1, 8 bytes/block for BC3/BC6H/BC7/ASTC
-		the blocks are stored in raster scan order (natural CPU texture layout)
-	  - you can use GetProfile_* functions to select various speed/quality tradeoffs.
-	  - the RGB profiles are slightly faster as they ignore the alpha channel
+	 - input width and height need to be a multiple of block size
+	 - LDR input is 32 bit/pixel (sRGB), HDR is 64 bit/pixel (half float)
+	 - dst buffer must be allocated with enough space for the compressed texture:
+	   4 bytes/block for BC1/ETC1, 8 bytes/block for BC3/BC6H/BC7/ASTC
+	   the blocks are stored in raster scan order (natural CPU texture layout)
+	 - you can use GetProfile_* functions to select various speed/quality tradeoffs.
+	 - the RGB profiles are slightly faster as they ignore the alpha channel
 */
 
 extern "C" void CompressBlocksBC1(const rgba_surface* src, uint8_t* dst);
