@@ -1,5 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2016, Intel Corporation
+// Copyright (c) 2018, Sebastian Kaufel
 // Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
 // documentation files (the "Software"), to deal in the Software without restriction, including without limitation 
 // the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
@@ -58,7 +59,8 @@ float4 RenderAlphaPS(VS_OUTPUT Input) : SV_TARGET
 {
 	float4 texel = gTexture.Sample(gSampler, Input.vTexcoord);
 	
-	float alpha = texel.a*texel.a; // compensate for gamma
+	//float alpha = texel.a*texel.a; // compensate for gamma
+	float alpha = texel.a;
 	
 	return float4(alpha.xxx, 1.0f);
 }
