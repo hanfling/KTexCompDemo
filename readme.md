@@ -5,7 +5,7 @@ Texture compression for BC1/BC3/BC6H/BC7, ETC1 and ASTC.
 Uses [ISPC compiler](https://ispc.github.io/).
 
 See [Fast ISPC Texture Compressor](https://software.intel.com/en-us/articles/fast-ispc-texture-compressor-update) post on
-Intel Developer Zone and the included [Technical Paper](./blob/master/ISPC%20Texture%20Compressor/ISPC%20Texture%20Compressor.pdf).
+Intel Developer Zone and the included [Technical Paper](./ISPC%20Texture%20Compressor/ISPC%20Texture%20Compressor.pdf).
 
 ## Supported compression formats
 
