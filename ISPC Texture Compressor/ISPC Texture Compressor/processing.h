@@ -28,8 +28,9 @@ extern double gCompTime;
 extern double gCompRate;
 extern int gTexWidth;
 extern int gTexHeight;
-extern double gError;
-extern double gError2;
+extern double gRGBError;
+extern double gRGBAError;
+extern double gAlphaError;
 
 extern ID3D11ShaderResourceView* gUncompressedSRV; // Shader resource view for the uncompressed texture resource.
 extern ID3D11ShaderResourceView* gCompressedSRV; // Shader resource view for the compressed texture resource.

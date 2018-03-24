@@ -24,8 +24,9 @@ double gCompTime = 0.0;
 double gCompRate = 0.0;
 int gTexWidth = 0;
 int gTexHeight = 0;
-double gError = 0.0;
-double gError2 = 0.0;
+double gRGBError = 0.0;
+double gRGBAError = 0.0;
+double gAlphaError = 0.0;
 
 ID3D11ShaderResourceView* gUncompressedSRV = NULL;
 ID3D11ShaderResourceView* gCompressedSRV = NULL;
@@ -747,8 +748,9 @@ void ComputeRMSE(const BYTE *errorData, const INT width, const INT height)
 	sum_sq_rgb /= (double(width) * double(height));
 	sum_sq_alpha /= (double(width) * double(height));
 
-	gError = 10 * log10((255.0 * 255.0*3)/(sum_sq_rgb));
-	gError2 = 10 * log10((255.0 * 255.0*4)/(sum_sq_rgb+sum_sq_alpha));
+	gRGBError = 10 * log10((255.0 * 255.0*3)/(sum_sq_rgb));
+	gRGBAError = 10 * log10((255.0 * 255.0*4)/(sum_sq_rgb+sum_sq_alpha));
+	gAlphaError = 10 * log10((255.0 * 255.0*1)/(sum_sq_alpha));
 }
 
 #define CHECK_WIN_THREAD_FUNC(x) \
