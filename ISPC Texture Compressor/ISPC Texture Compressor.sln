@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
-VisualStudioVersion = 12.0.30110.0
+VisualStudioVersion = 12.0.30501.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ISPC Texture Compressor", "ISPC Texture Compressor\ISPC Texture Compressor.vcxproj", "{CA2A6F2C-15A3-49CB-BDE3-746D1149D924}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -15,6 +15,8 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DXUT", "..\DXUT\Core\DXUT_2010.vcxproj", "{85344B7F-5AA0-4E12-A065-D1333D11F6CA}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DXUTOpt", "..\DXUT\Optional\DXUTOpt_2010.vcxproj", "{61B333C2-C4F7-4CC1-A9BF-83F6D95588EB}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ISPC HDR Texture Compressor", "ISPC HDR Texture Compressor\ISPC HDR Texture Compressor.vcxproj", "{4ACC4F77-BE38-412F-9E12-E28DE228D7ED}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -72,6 +74,18 @@ Global
 		{61B333C2-C4F7-4CC1-A9BF-83F6D95588EB}.Release|Win32.Build.0 = Release|Win32
 		{61B333C2-C4F7-4CC1-A9BF-83F6D95588EB}.Release|x64.ActiveCfg = Release|x64
 		{61B333C2-C4F7-4CC1-A9BF-83F6D95588EB}.Release|x64.Build.0 = Release|x64
+		{4ACC4F77-BE38-412F-9E12-E28DE228D7ED}.Debug|Win32.ActiveCfg = Debug|Win32
+		{4ACC4F77-BE38-412F-9E12-E28DE228D7ED}.Debug|Win32.Build.0 = Debug|Win32
+		{4ACC4F77-BE38-412F-9E12-E28DE228D7ED}.Debug|x64.ActiveCfg = Debug|x64
+		{4ACC4F77-BE38-412F-9E12-E28DE228D7ED}.Debug|x64.Build.0 = Debug|x64
+		{4ACC4F77-BE38-412F-9E12-E28DE228D7ED}.Profile|Win32.ActiveCfg = Release|Win32
+		{4ACC4F77-BE38-412F-9E12-E28DE228D7ED}.Profile|Win32.Build.0 = Release|Win32
+		{4ACC4F77-BE38-412F-9E12-E28DE228D7ED}.Profile|x64.ActiveCfg = Release|x64
+		{4ACC4F77-BE38-412F-9E12-E28DE228D7ED}.Profile|x64.Build.0 = Release|x64
+		{4ACC4F77-BE38-412F-9E12-E28DE228D7ED}.Release|Win32.ActiveCfg = Release|Win32
+		{4ACC4F77-BE38-412F-9E12-E28DE228D7ED}.Release|Win32.Build.0 = Release|Win32
+		{4ACC4F77-BE38-412F-9E12-E28DE228D7ED}.Release|x64.ActiveCfg = Release|x64
+		{4ACC4F77-BE38-412F-9E12-E28DE228D7ED}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
