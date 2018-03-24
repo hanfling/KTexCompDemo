@@ -1,20 +1,30 @@
 # Fast ISPC Texture Compressor
 
-State of the art texture compression for BC6H, BC7, ETC1, ASTC and BC1/BC3.
+Texture compression for BC1/BC3/BC6H/BC7, ETC1 and ASTC.
 
 Uses [ISPC compiler](https://ispc.github.io/).
 
 See [Fast ISPC Texture Compressor](https://software.intel.com/en-us/articles/fast-ispc-texture-compressor-update) post on
 Intel Developer Zone.
 
-Supported compression formats:
+## Supported compression formats
 
-* BC6H (FP16 HDR input)
+* BC1
+* BC3
+* BC6H
 * BC7
-* ASTC (LDR, block sizes up to 8x8)
 * ETC1
-* BC1, BC3 (aka DXT1, DXT5)
+* ASTC
 
+## Limitations
+
+* Lack of notion about user intended colorspaces or compression metrics (sRGB is assumed for LDR input).
+* Half floating point input for BC6H and otherwise unsigned byte input only.
+* Very basic support for BC3 alpha channel.
+* BC1 lacks punchthrough alpha support.
+* ASTC is LDR only and won't support block sizes above 8x8.
+* No decompression support.
+* No unit testing.
 
 ## Build Instructions
 
