@@ -16,6 +16,10 @@ Intel Developer Zone and the included [Technical Paper](./ISPC%20Texture%20Compr
 * ETC1
 * ASTC
 
+## Strenghts
+* Compression speed runtime adjustable over two magnitudes, making this library suitable for fast iteration and production use.
+* [BC7 texture compression.](http://gamma.cs.unc.edu/FasTC/)
+
 ## Limitations
 
 * Lack of notion about user intended colorspaces or compression metrics (sRGB is assumed for LDR input).
