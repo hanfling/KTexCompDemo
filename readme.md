@@ -19,6 +19,7 @@ Intel Developer Zone and the included [Technical Paper](./ISPC%20Texture%20Compr
 ## Strenghts
 * Compression speed runtime adjustable over two magnitudes, making this library suitable for fast iteration and production use.
 * [BC7 texture compression.](http://gamma.cs.unc.edu/FasTC/)
+* Visual demonstration tools included.
 
 ## Limitations
 
@@ -27,6 +28,7 @@ Intel Developer Zone and the included [Technical Paper](./ISPC%20Texture%20Compr
 * Very basic support for BC3 alpha channel.
 * BC1 lacks punchthrough alpha support.
 * ASTC is LDR only and won't support block sizes above 8x8.
+* Lack of documentation.
 * No decompression support.
 * No unit testing.
 
