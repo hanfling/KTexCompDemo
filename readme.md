@@ -9,12 +9,12 @@ Intel Developer Zone and the included [Technical Paper](./ISPC%20Texture%20Compr
 
 ## Supported compression formats
 
-* BC1
-* BC3
-* BC6H
-* BC7
-* ETC1
-* ASTC
+* [BC1](https://www.khronos.org/registry/OpenGL/extensions/EXT/EXT_texture_compression_s3tc.txt)
+* [BC3](https://www.khronos.org/registry/OpenGL/extensions/EXT/EXT_texture_compression_s3tc.txt)
+* [BC6H](https://www.khronos.org/registry/OpenGL/extensions/ARB/ARB_texture_compression_bptc.txt)
+* [BC7](https://www.khronos.org/registry/OpenGL/extensions/ARB/ARB_texture_compression_bptc.txt)
+* [ETC1](https://www.khronos.org/registry/OpenGL/extensions/OES/OES_compressed_ETC1_RGB8_texture.txt)
+* [ASTC](https://www.khronos.org/registry/OpenGL/extensions/KHR/KHR_texture_compression_astc_hdr.txt)
 
 ## Strenghts
 * Compression speed runtime adjustable over two magnitudes, making this library suitable for fast iteration and production use.
