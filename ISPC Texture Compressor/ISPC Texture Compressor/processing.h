@@ -83,6 +83,7 @@ int GetBytesPerBlock(CompressionFunc* fn);
 DXGI_FORMAT GetFormatFromCompressionFunc(CompressionFunc* fn);
 
 void CompressImageBC1(const rgba_surface* input, BYTE* output);
+void CompressImageBC2(const rgba_surface* input, BYTE* output);
 void CompressImageBC3(const rgba_surface* input, BYTE* output);
 void CompressImageBC7_ultrafast(const rgba_surface* input, BYTE* output);
 void CompressImageBC7_veryfast(const rgba_surface* input, BYTE* output);

@@ -243,7 +243,7 @@ inline void compute_axis(float axis[4], float covar[10], uniform const int power
 }
 
 ///////////////////////////////////////////////////////////
-//					 BC1/BC3 encoding
+//					 BC1/BC2/BC3 encoding
 
 inline int stb__Mul8Bit(int a, int b)
 {
@@ -554,6 +554,18 @@ inline void CompressBlockBC1_core(float block[48], uint32 data[2])
 	data[1] = fix_qbits(data[1]);
 }
 
+inline void QuantizeBlockBC2_alpha(float block[16], uint32 data[2])
+{
+	uint64 out = 0;
+
+	// Integer values 0-15 can be exactly represented in IEEE 754.
+	for (uniform int k=0; k<16; k++)
+		out |= (((uint64)round(block[k]/255.f*15.f))&0xFull)<<(k*4); // Performance warning, but ispc documentation won't show which rules it follows for shifting signed numbers.
+
+	data[0] = (out    )&0xFFFFFFFFull;
+	data[1] = (out>>32)&0xFFFFFFFFull;
+}
+
 // FIX-ME: Constant color blocks allegedly can cause issues.
 inline void CompressBlockBC3_alpha(float block[16], uint32 data[2])
 {
@@ -607,6 +619,19 @@ inline void CompressBlockBC1(uniform rgba_surface src[], int xx, uniform int yy,
 	store_data(dst, src->width, xx, yy, data, 2);
 }
 
+inline void CompressBlockBC2(uniform rgba_surface src[], int xx, uniform int yy, uniform uint8 dst[])
+{
+	float block[64];
+	uint32 data[4];
+
+	load_block_interleaved_rgba(block, src, xx, yy);
+	
+	QuantizeBlockBC2_alpha(&block[48], &data[0]);
+	CompressBlockBC1_core(block, &data[2]);
+
+	store_data(dst, src->width, xx, yy, data, 4);
+}
+
 inline void CompressBlockBC3(uniform rgba_surface src[], int xx, uniform int yy, uniform uint8 dst[])
 {
 	float block[64];
@@ -625,6 +650,13 @@ export void CompressBlocksBC1_ispc(uniform rgba_surface src[], uniform uint8 dst
 	for (uniform int yy = 0; yy<src->height/4; yy++)
 		foreach (xx = 0 ... src->width/4)
 			CompressBlockBC1(src, xx, yy, dst);
+}
+
+export void CompressBlocksBC2_ispc(uniform rgba_surface src[], uniform uint8 dst[])
+{	
+	for (uniform int yy = 0; yy<src->height/4; yy++)
+		foreach (xx = 0 ... src->width/4)
+			CompressBlockBC2(src, xx, yy, dst);
 }
 
 export void CompressBlocksBC3_ispc(uniform rgba_surface src[], uniform uint8 dst[])

@@ -208,6 +208,7 @@ void FillProfiles(BOOL DX11Available)
 {
 	CDXUTComboBox *comboBox = gSampleUI.GetComboBox(IDC_PROFILE);
 	comboBox->AddItem(L"BC1 (RGB)", (void *)(CompressImageBC1));
+	comboBox->AddItem(L"BC2 (RGBA)", (void *)(CompressImageBC2));
 	comboBox->AddItem(L"BC3 (RGBA)", (void *)(CompressImageBC3));
 	if (DX11Available)
 	{

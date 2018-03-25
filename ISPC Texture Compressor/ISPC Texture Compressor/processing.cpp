@@ -421,6 +421,7 @@ HRESULT CompressTexture(ID3D11ShaderResourceView* uncompressedSRV, ID3D11ShaderR
 static inline DXGI_FORMAT GetNonSRGBFormat(DXGI_FORMAT f) {
 	switch(f) {
 		case DXGI_FORMAT_BC1_UNORM_SRGB: return DXGI_FORMAT_BC1_UNORM;
+		case DXGI_FORMAT_BC2_UNORM_SRGB: return DXGI_FORMAT_BC2_UNORM;
 		case DXGI_FORMAT_BC3_UNORM_SRGB: return DXGI_FORMAT_BC3_UNORM;
 		case DXGI_FORMAT_BC7_UNORM_SRGB: return DXGI_FORMAT_BC7_UNORM; 
 		case DXGI_FORMAT_R8G8B8A8_UNORM_SRGB: return DXGI_FORMAT_R8G8B8A8_UNORM;
@@ -989,7 +990,8 @@ int GetBytesPerBlock(CompressionFunc* fn)
 		default:
 		case DXGI_FORMAT_BC1_UNORM_SRGB:
 			return 8;
-				
+
+		case DXGI_FORMAT_BC2_UNORM_SRGB:
 		case DXGI_FORMAT_BC3_UNORM_SRGB:
 		case DXGI_FORMAT_BC7_UNORM_SRGB:
 			return 16;
@@ -999,6 +1001,7 @@ int GetBytesPerBlock(CompressionFunc* fn)
 DXGI_FORMAT GetFormatFromCompressionFunc(CompressionFunc* fn)
 {
 	if (fn == CompressImageBC1) return DXGI_FORMAT_BC1_UNORM_SRGB;
+	if (fn == CompressImageBC2) return DXGI_FORMAT_BC2_UNORM_SRGB;
 	if (fn == CompressImageBC3) return DXGI_FORMAT_BC3_UNORM_SRGB;
 	
 	return DXGI_FORMAT_BC7_UNORM_SRGB;
@@ -1009,6 +1012,10 @@ void CompressImageBC1(const rgba_surface* input, BYTE* output)
 	CompressBlocksBC1(input, output);
 }
 
+void CompressImageBC2(const rgba_surface* input, BYTE* output)
+{
+	CompressBlocksBC2(input, output);
+}
 void CompressImageBC3(const rgba_surface* input, BYTE* output)
 {
 	CompressBlocksBC3(input, output);

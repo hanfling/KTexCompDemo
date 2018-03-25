@@ -1,6 +1,7 @@
 LIBRARY   ispc_texcomp
 EXPORTS
 	CompressBlocksBC1
+	CompressBlocksBC2
 	CompressBlocksBC3
 	CompressBlocksBC6H
 	CompressBlocksBC7

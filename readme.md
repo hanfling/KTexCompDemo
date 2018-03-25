@@ -1,6 +1,6 @@
 # Fast ISPC Texture Compressor
 
-Texture compression for BC1/BC3/BC6H/BC7, ETC1 and ASTC.
+Texture compression for BC1/BC2/BC3/BC6H/BC7, ETC1 and ASTC.
 
 Uses [ISPC compiler](https://ispc.github.io/).
 
@@ -10,6 +10,7 @@ Intel Developer Zone and the included [Technical Paper](./ISPC%20Texture%20Compr
 ## Supported compression formats
 
 * [BC1](https://www.khronos.org/registry/OpenGL/extensions/EXT/EXT_texture_compression_s3tc.txt)
+* [BC2](https://www.khronos.org/registry/OpenGL/extensions/EXT/EXT_texture_compression_s3tc.txt)
 * [BC3](https://www.khronos.org/registry/OpenGL/extensions/EXT/EXT_texture_compression_s3tc.txt)
 * [BC6H](https://www.khronos.org/registry/OpenGL/extensions/ARB/ARB_texture_compression_bptc.txt)
 * [BC7](https://www.khronos.org/registry/OpenGL/extensions/ARB/ARB_texture_compression_bptc.txt)

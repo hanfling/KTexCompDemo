@@ -100,13 +100,14 @@ extern "C" void ReplicateBorders(rgba_surface* dst_slice, const rgba_surface* sr
 	 - input width and height need to be a multiple of block size
 	 - LDR input is 32 bit/pixel (sRGB), HDR is 64 bit/pixel (half float)
 	 - dst buffer must be allocated with enough space for the compressed texture:
-	   4 bytes/block for BC1/ETC1, 8 bytes/block for BC3/BC6H/BC7/ASTC
+	   4 bytes/block for BC1/ETC1, 8 bytes/block for BC2/BC3/BC6H/BC7/ASTC
 	   the blocks are stored in raster scan order (natural CPU texture layout)
 	 - you can use GetProfile_* functions to select various speed/quality tradeoffs.
 	 - the RGB profiles are slightly faster as they ignore the alpha channel
 */
 
 extern "C" void CompressBlocksBC1(const rgba_surface* src, uint8_t* dst);
+extern "C" void CompressBlocksBC2(const rgba_surface* src, uint8_t* dst);
 extern "C" void CompressBlocksBC3(const rgba_surface* src, uint8_t* dst);
 extern "C" void CompressBlocksBC6H(const rgba_surface* src, uint8_t* dst, bc6h_enc_settings* settings);
 extern "C" void CompressBlocksBC7(const rgba_surface* src, uint8_t* dst, bc7_enc_settings* settings);
