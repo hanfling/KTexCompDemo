@@ -67,6 +67,26 @@ inline unsigned int32 gather_uint(const varying unsigned int32* const uniform pt
 	return ptr[idx]; // (perf warning expected)
 }
 
+inline unsigned int16 gather_uint16(const uniform unsigned int16* const uniform ptr, int idx)
+{
+	return ptr[idx]; // (perf warning expected)
+}
+
+inline unsigned int16 gather_uint16(const varying unsigned int16* const uniform ptr, int idx)
+{
+	return ptr[idx]; // (perf warning expected)
+}
+
+inline unsigned int8 gather_uint8(const uniform unsigned int8* const uniform ptr, int idx)
+{
+	return ptr[idx]; // (perf warning expected)
+}
+
+inline unsigned int8 gather_uint8(const varying unsigned int8* const uniform ptr, int idx)
+{
+	return ptr[idx]; // (perf warning expected)
+}
+
 inline int32 gather_int(const uniform int32* const uniform ptr, int idx)
 {
 	return ptr[idx]; // (perf warning expected)
@@ -93,9 +113,21 @@ inline uint32 shift_right(uint32 v, const uniform int bits)
 }
 
 ///////////////////////////////////////////////////////////
-//				    BC1/BC7 shared
+//				    BC1/BC2/BC3/BC4/BC5/BC7 shared
 
 struct rgba_surface
+{
+	uint8* ptr;
+	int width, height, stride;
+};
+
+struct rg_surface
+{
+	uint8* ptr;
+	int width, height, stride;
+};
+
+struct red_surface
 {
 	uint8* ptr;
 	int width, height, stride;
@@ -130,6 +162,35 @@ inline void load_block_interleaved_rgba(float block[64], uniform rgba_surface* u
 			block[16*1+y*4+x] = (int)((rgba>> 8)&255);
 			block[16*2+y*4+x] = (int)((rgba>>16)&255);
 			block[16*3+y*4+x] = (int)((rgba>>24)&255);
+		}
+	}
+}
+
+inline void load_block_interleaved_rg(float block[32], uniform rg_surface* uniform src, int xx, uniform int yy)
+{
+	for (uniform int y=0; y<4; y++)
+	{
+		for (uniform int x=0; x<4; x++)
+		{
+			uniform unsigned int16* uniform src_ptr = (unsigned int16*)&src->ptr[(yy*4+y)*src->stride];
+			unsigned int16 rg = gather_uint16(src_ptr, xx*4+x);
+
+			block[16*0+y*4+x] = (int)((rg>>0)&255);
+			block[16*1+y*4+x] = (int)((rg>>8)&255);
+		}
+	}
+}
+
+inline void load_block_red(float block[16], uniform red_surface* uniform src, int xx, uniform int yy)
+{
+	for (uniform int y=0; y<4; y++)
+	{
+		for (uniform int x=0; x<4; x++)
+		{
+			uniform unsigned int8* uniform src_ptr = (unsigned int8*)&src->ptr[(yy*4+y)*src->stride];
+			unsigned int8 red = gather_uint8(src_ptr, xx*4+x);
+
+			block[y*4+x] = (int)red;
 		}
 	}
 }
@@ -243,7 +304,7 @@ inline void compute_axis(float axis[4], float covar[10], uniform const int power
 }
 
 ///////////////////////////////////////////////////////////
-//					 BC1/BC2/BC3 encoding
+//					 BC1/BC2/BC3/BC4/BC5 encoding
 
 inline int stb__Mul8Bit(int a, int b)
 {
@@ -645,6 +706,31 @@ inline void CompressBlockBC3(uniform rgba_surface src[], int xx, uniform int yy,
 	store_data(dst, src->width, xx, yy, data, 4);
 }
 
+inline void CompressBlockBC4(uniform red_surface src[], int xx, uniform int yy, uniform uint8 dst[])
+{
+	float block[16];
+	uint32 data[2];
+
+	load_block_red(block, src, xx, yy);
+	
+	CompressBlockBC3_alpha(&block[0], &data[0]);
+
+	store_data(dst, src->width, xx, yy, data, 2);
+}
+
+inline void CompressBlockBC5(uniform rg_surface src[], int xx, uniform int yy, uniform uint8 dst[])
+{
+	float block[32];
+	uint32 data[4];
+
+	load_block_interleaved_rg(block, src, xx, yy);
+	
+	CompressBlockBC3_alpha(&block[0], &data[0]);
+	CompressBlockBC3_alpha(&block[16], &data[2]);
+
+	store_data(dst, src->width, xx, yy, data, 4);
+}
+
 export void CompressBlocksBC1_ispc(uniform rgba_surface src[], uniform uint8 dst[])
 {	
 	for (uniform int yy = 0; yy<src->height/4; yy++)
@@ -664,6 +750,20 @@ export void CompressBlocksBC3_ispc(uniform rgba_surface src[], uniform uint8 dst
 	for (uniform int yy = 0; yy<src->height/4; yy++)
 		foreach (xx = 0 ... src->width/4)
 			CompressBlockBC3(src, xx, yy, dst);
+}
+
+export void CompressBlocksBC4_ispc(uniform red_surface src[], uniform uint8 dst[])
+{	
+	for (uniform int yy = 0; yy<src->height/4; yy++)
+		foreach (xx = 0 ... src->width/4)
+			CompressBlockBC4(src, xx, yy, dst);
+}
+
+export void CompressBlocksBC5_ispc(uniform rg_surface src[], uniform uint8 dst[])
+{	
+	for (uniform int yy = 0; yy<src->height/4; yy++)
+		foreach (xx = 0 ... src->width/4)
+			CompressBlockBC5(src, xx, yy, dst);
 }
 
 ///////////////////////////////////////////////////////////

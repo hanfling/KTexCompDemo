@@ -3,6 +3,8 @@ EXPORTS
 	CompressBlocksBC1
 	CompressBlocksBC2
 	CompressBlocksBC3
+	CompressBlocksBC4
+	CompressBlocksBC5
 	CompressBlocksBC6H
 	CompressBlocksBC7
 	CompressBlocksETC1

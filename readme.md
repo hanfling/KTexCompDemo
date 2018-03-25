@@ -1,6 +1,6 @@
 # Fast ISPC Texture Compressor
 
-Texture compression for BC1/BC2/BC3/BC6H/BC7, ETC1 and ASTC.
+Texture compression for BC1-BC7, ETC1 and ASTC.
 
 Uses [ISPC compiler](https://ispc.github.io/).
 
@@ -12,6 +12,8 @@ Intel Developer Zone and the included [Technical Paper](./ISPC%20Texture%20Compr
 * [BC1](https://www.khronos.org/registry/OpenGL/extensions/EXT/EXT_texture_compression_s3tc.txt)
 * [BC2](https://www.khronos.org/registry/OpenGL/extensions/EXT/EXT_texture_compression_s3tc.txt)
 * [BC3](https://www.khronos.org/registry/OpenGL/extensions/EXT/EXT_texture_compression_s3tc.txt)
+* [BC4](https://www.khronos.org/registry/OpenGL/extensions/ARB/ARB_texture_compression_rgtc.txt)
+* [BC5](https://www.khronos.org/registry/OpenGL/extensions/ARB/ARB_texture_compression_rgtc.txt)
 * [BC6H](https://www.khronos.org/registry/OpenGL/extensions/ARB/ARB_texture_compression_bptc.txt)
 * [BC7](https://www.khronos.org/registry/OpenGL/extensions/ARB/ARB_texture_compression_bptc.txt)
 * [ETC1](https://www.khronos.org/registry/OpenGL/extensions/OES/OES_compressed_ETC1_RGB8_texture.txt)
@@ -26,8 +28,9 @@ Intel Developer Zone and the included [Technical Paper](./ISPC%20Texture%20Compr
 
 * Lack of notion about user intended colorspaces or compression metrics (sRGB is assumed for LDR input).
 * Half floating point input for BC6H and otherwise unsigned byte input only.
-* Very basic support for BC3 alpha channel.
+* Very basic support for BC3 alpha channel and BC4/BC5.
 * BC1 lacks punchthrough alpha support.
+* Only unsigned format of BC4/BC5/BC6H is supported.
 * ASTC is LDR only and won't support block sizes above 8x8.
 * Lack of documentation.
 * No decompression support.
