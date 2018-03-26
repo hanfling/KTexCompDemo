@@ -30,9 +30,18 @@
     <ClInclude Include="ispc_texcomp.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="kernel_shared.isph">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="ispc_texcomp.def">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="kernel_bptc.ispc">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="kernel_etc.ispc">
       <Filter>Source Files</Filter>
     </None>
   </ItemGroup>

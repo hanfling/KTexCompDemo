@@ -1,0 +1,483 @@
+//
+// Shared and general purpose code for the encoding implementations.
+//
+
+//
+//  Copyright (c) 2016 Intel Corporation
+//
+//  Permission is hereby granted, free of charge, to any person obtaining a copy of this 
+//  software and associated documentation files (the "Software"), to deal in the Software 
+//  without restriction, including without limitation the rights to use, copy, modify, 
+//  merge, publish, distribute, sublicense, and/or sell copies of the Software, and to 
+//  permit persons to whom the Software is furnished to do so, subject to the following 
+//  conditions: 
+//
+//  The above copyright notice and this permission notice shall be included in all copies 
+//  or substantial portions of the Software.  
+//
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
+//  INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A 
+//  PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT 
+//  HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF 
+//  CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE 
+//  OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+//
+
+///////////////////////////////////////////////////////////
+// Typedefs.
+//
+
+typedef unsigned int8 uint8;
+typedef unsigned int32 uint32;
+typedef unsigned int64 uint64;
+
+
+///////////////////////////////////////////////////////////
+// The following helpers isolate performance warnings 
+//
+
+// int32
+inline int32 gather_int(const uniform int32* const uniform ptr, int idx)
+{
+	return ptr[idx]; // (perf warning expected)
+}
+inline void scatter_int(varying int32* uniform ptr, int idx, uint32 value)
+{
+	ptr[idx] = value; // (perf warning expected)
+}
+
+// uint8
+inline unsigned int8 gather_uint8(const uniform unsigned int8* const uniform ptr, int idx)
+{
+	return ptr[idx]; // (perf warning expected)
+}
+inline unsigned int8 gather_uint8(const varying unsigned int8* const uniform ptr, int idx)
+{
+	return ptr[idx]; // (perf warning expected)
+}
+
+// uint16
+inline unsigned int16 gather_uint16(const uniform unsigned int16* const uniform ptr, int idx)
+{
+	return ptr[idx]; // (perf warning expected)
+}
+inline unsigned int16 gather_uint16(const varying unsigned int16* const uniform ptr, int idx)
+{
+	return ptr[idx]; // (perf warning expected)
+}
+
+// uint32
+inline unsigned int32 gather_uint(const uniform unsigned int32* const uniform ptr, int idx)
+{
+	return ptr[idx]; // (perf warning expected)
+}
+inline unsigned int32 gather_uint(const varying unsigned int32* const uniform ptr, int idx)
+{
+	return ptr[idx]; // (perf warning expected)
+}
+inline void scatter_uint(uniform unsigned int32* ptr, int idx, uint32 value)
+{
+	ptr[idx] = value; // (perf warning expected)
+}
+inline uint32 shift_right(uint32 v, const uniform int bits)
+{
+	return v>>bits; // (perf warning expected)
+}
+
+// float
+inline float gather_float(uniform float* uniform ptr, int idx)
+{
+	return ptr[idx]; // (perf warning expected)
+}
+inline float gather_float(varying float* uniform ptr, int idx)
+{
+	return ptr[idx]; // (perf warning expected)
+}
+inline void scatter_float(uniform float* uniform ptr, int idx, float value)
+{
+	ptr[idx] = value; // (perf warning expected)
+}
+inline void scatter_float(varying float* uniform ptr, int idx, float value)
+{
+	ptr[idx] = value; // (perf warning expected)
+}
+
+
+///////////////////////////////////////////////////////////
+// Swapping helpers
+
+inline void swap(float& a, float& b)
+{
+	int t = a;
+	a = b; b = t;
+}
+
+inline void swap(int& a, int& b)
+{
+	int t = a;
+	a = b; b = t;
+}
+
+inline void swap(uint32& a, uint32& b)
+{
+	uint32 t = a;
+	a = b; b = t;
+}
+
+inline void swap(uint8& a, uint8& b)
+{
+	uint8 t = a;
+	a = b; b = t;
+}
+
+inline void swap_ints(int u[], int v[], uniform int n)
+{
+	for (uniform int i=0; i<n; i++)
+	{
+		int t = u[i];
+		u[i] = v[i];
+		v[i] = t;
+	}
+}
+
+inline void swap_uints(uint32 u[], uint32 v[], uniform int n)
+{
+	for (uniform int i=0; i<n; i++)
+	{
+		uint32 t = u[i];
+		u[i] = v[i];
+		v[i] = t;
+	}
+}
+
+inline uint32 bswap32(uint32 v)
+{
+	uint32 r = 0;
+	r += ((v >> 24) & 255) << 0;
+	r += ((v >> 16) & 255) << 8;
+	r += ((v >> 8) & 255) << 16;
+	r += ((v >> 0) & 255) << 24;
+	return r;
+}
+
+
+///////////////////////////////////////////////////////////
+// Scalar math helpers
+
+inline float sq(float v)
+{
+	return v*v;
+}
+
+inline int pow2(int x) 
+{
+	return 1<<x; 
+}
+
+inline float clamp(float v, int a, int b)
+{
+	return clamp(v, (float)a, (float)b);
+}
+
+
+///////////////////////////////////////////////////////////
+// Vector/Matrix/Tensor math helpers
+
+// vector dot product.
+inline float dot3(float a[3], float b[3])
+{
+	return a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
+}
+inline float dot4(float a[4], float b[4])
+{
+	return a[0]*b[0]+a[1]*b[1]+a[2]*b[2]+a[3]*b[3];
+}
+
+// a = covar*b, where a,b are vectors and b is a matrix.
+inline void ssymv(float a[3], float covar[6], float b[3])
+{
+	a[0] = covar[0]*b[0]+covar[1]*b[1]+covar[2]*b[2];
+	a[1] = covar[1]*b[0]+covar[3]*b[1]+covar[4]*b[2];
+	a[2] = covar[2]*b[0]+covar[4]*b[1]+covar[5]*b[2];
+}
+inline void ssymv3(float a[4], float covar[10], float b[4])
+{
+	a[0] = covar[0]*b[0]+covar[1]*b[1]+covar[2]*b[2];
+	a[1] = covar[1]*b[0]+covar[4]*b[1]+covar[5]*b[2];
+	a[2] = covar[2]*b[0]+covar[5]*b[1]+covar[7]*b[2];
+}
+inline void ssymv4(float a[4], float covar[10], float b[4])
+{
+	a[0] = covar[0]*b[0]+covar[1]*b[1]+covar[2]*b[2]+covar[3]*b[3];
+	a[1] = covar[1]*b[0]+covar[4]*b[1]+covar[5]*b[2]+covar[6]*b[3];
+	a[2] = covar[2]*b[0]+covar[5]*b[1]+covar[7]*b[2]+covar[8]*b[3];
+	a[3] = covar[3]*b[0]+covar[6]*b[1]+covar[8]*b[2]+covar[9]*b[3];
+}
+
+
+///////////////////////////////////////////////////////////
+// Bit manipulation helpers.
+//
+
+inline void put_bits(uint32 data[5], uniform int* uniform pos, uniform int bits, int v)
+{
+	assert(v<pow2(bits));
+	data[*pos/32] |= ((uint32)v) << (*pos%32);
+	if (*pos%32+bits>32)
+		data[*pos/32+1] |= shift_right(v, 32-*pos%32);
+	*pos += bits;
+}
+
+
+///////////////////////////////////////////////////////////
+// Helper for pixel access in variable sized block.
+//
+
+inline float get_pixel(float pixels[], uniform int p, uniform int x, uniform int y)
+{
+	uniform static const int ystride = 8;
+	uniform static const int pstride = 64;
+
+	return pixels[pstride * p + ystride * y + x];
+}
+
+inline void set_pixel(float pixels[], uniform int p, uniform int x, uniform int y, float value)
+{
+	uniform static const int ystride = 8;
+	uniform static const int pstride = 64;
+
+	pixels[pstride * p + ystride * y + x] = value;
+}
+
+
+///////////////////////////////////////////////////////////
+// Generic helpers
+
+
+
+///////////////////////////////////////////////////////////
+// Axis computation.
+//
+
+inline void compute_axis3(float axis[3], float covar[6], uniform const int powerIterations)
+{
+	float vec[3] = {1,1,1};
+
+	for (uniform int i=0; i<powerIterations; i++)
+	{
+		ssymv(axis, covar, vec);
+		for (uniform int p=0; p<3; p++)
+			vec[p] = axis[p];
+
+		if (i%2==1) // renormalize every other iteration
+		{
+			float norm_sq = 0;
+			for (uniform int p=0; p<3; p++)
+				norm_sq += axis[p]*axis[p];
+
+			float rnorm = rsqrt(norm_sq);
+			for (uniform int p=0; p<3; p++)
+				vec[p] *= rnorm;
+		}
+	}
+
+	for (uniform int p=0; p<3; p++)
+		axis[p] = vec[p];
+}
+
+inline void compute_axis(float axis[4], float covar[10], uniform const int powerIterations, uniform int channels)
+{
+	float vec[4] = {1,1,1,1};
+
+	for (uniform int i=0; i<powerIterations; i++)
+	{
+		if (channels == 3)
+			ssymv3(axis, covar, vec);
+		if (channels == 4)
+			ssymv4(axis, covar, vec);
+
+		for (uniform int p=0; p<channels; p++)
+			vec[p] = axis[p];
+
+		if (i%2==1) // renormalize every other iteration
+		{
+			float norm_sq = 0;
+			for (uniform int p=0; p<channels; p++)
+				norm_sq += axis[p]*axis[p];
+
+			float rnorm = rsqrt(norm_sq);
+			for (uniform int p=0; p<channels; p++)
+				vec[p] *= rnorm;
+		}		
+	}
+
+	for (uniform int p=0; p<channels; p++)
+		axis[p] = vec[p];
+}
+
+
+///////////////////////////////////////////////////////////
+// Sorting helpers
+//
+
+inline void partial_sort_list(int list[], uniform int length, uniform int partial_count)
+{
+	for (uniform int k=0; k<partial_count; k++)
+	{
+		int best_idx = k;
+		int best_value = list[k];
+		for (uniform int i=k+1; i<length; i++)
+		{
+			if (best_value > list[i])
+			{
+				best_value = list[i];
+				best_idx = i;
+			}
+		}
+
+		// swap
+		scatter_int(list, best_idx, list[k]);
+		list[k] = best_value;
+	}
+}
+
+
+///////////////////////////////////////////////////////////
+// Input surface structures.
+//
+
+struct rgba_surface
+{
+	uint8* ptr;
+	int width, height, stride;
+};
+
+struct rg_surface
+{
+	uint8* ptr;
+	int width, height, stride;
+};
+
+struct red_surface
+{
+	uint8* ptr;
+	int width, height, stride;
+};
+
+
+///////////////////////////////////////////////////////////
+// Load data from input surface structures.
+//
+
+inline void load_4x4_block_interleaved(float block[48], uniform rgba_surface* uniform src, int xx, uniform int yy)
+{
+	for (uniform int y = 0; y<4; y++)
+	{
+		for (uniform int x = 0; x<4; x++)
+		{
+			uniform unsigned int32* uniform src_ptr = (unsigned int32*)&src->ptr[(yy * 4 + y)*src->stride];
+			unsigned int32 rgba = gather_uint(src_ptr, xx * 4 + x);
+
+			block[16 * 0 + y * 4 + x] = (int)((rgba >> 0) & 255);
+			block[16 * 1 + y * 4 + x] = (int)((rgba >> 8) & 255);
+			block[16 * 2 + y * 4 + x] = (int)((rgba >> 16) & 255);
+		}
+	}
+}
+
+inline void load_4x4_block_interleaved_rgba(float block[64], uniform rgba_surface* uniform src, int xx, uniform int yy)
+{
+	for (uniform int y=0; y<4; y++)
+	{
+		for (uniform int x=0; x<4; x++)
+		{
+			uniform unsigned int32* uniform src_ptr = (unsigned int32*)&src->ptr[(yy*4+y)*src->stride];
+			unsigned int32 rgba = gather_uint(src_ptr, xx*4+x);
+
+			block[16*0+y*4+x] = (int)((rgba>> 0)&255);
+			block[16*1+y*4+x] = (int)((rgba>> 8)&255);
+			block[16*2+y*4+x] = (int)((rgba>>16)&255);
+			block[16*3+y*4+x] = (int)((rgba>>24)&255);
+		}
+	}
+}
+
+inline void load_4x4_block_interleaved_rg(float block[32], uniform rg_surface* uniform src, int xx, uniform int yy)
+{
+	for (uniform int y=0; y<4; y++)
+	{
+		for (uniform int x=0; x<4; x++)
+		{
+			uniform unsigned int16* uniform src_ptr = (unsigned int16*)&src->ptr[(yy*4+y)*src->stride];
+			unsigned int16 rg = gather_uint16(src_ptr, xx*4+x);
+
+			block[16*0+y*4+x] = (int)((rg>>0)&255);
+			block[16*1+y*4+x] = (int)((rg>>8)&255);
+		}
+	}
+}
+
+inline void load_4x4_block_red(float block[16], uniform red_surface* uniform src, int xx, uniform int yy)
+{
+	for (uniform int y=0; y<4; y++)
+	{
+		for (uniform int x=0; x<4; x++)
+		{
+			uniform unsigned int8* uniform src_ptr = (unsigned int8*)&src->ptr[(yy*4+y)*src->stride];
+			unsigned int8 red = gather_uint8(src_ptr, xx*4+x);
+
+			block[y*4+x] = (int)red;
+		}
+	}
+}
+
+inline void load_4x4_block_interleaved_16bit(float block[48], uniform rgba_surface* uniform src, int xx, uniform int yy)
+{
+	for (uniform int y = 0; y<4; y++)
+	{
+		for (uniform int x = 0; x<4; x++)
+		{
+			uniform unsigned int32* uniform src_ptr_r = (unsigned int32*)&src->ptr[(yy * 4 + y)*src->stride + 0];
+			uniform unsigned int32* uniform src_ptr_g = (unsigned int32*)&src->ptr[(yy * 4 + y)*src->stride + 2];
+			uniform unsigned int32* uniform src_ptr_b = (unsigned int32*)&src->ptr[(yy * 4 + y)*src->stride + 4];
+			unsigned int32 xr = gather_uint(src_ptr_r, (xx * 4 + x) * 2);
+			unsigned int32 xg = gather_uint(src_ptr_g, (xx * 4 + x) * 2);
+			unsigned int32 xb = gather_uint(src_ptr_b, (xx * 4 + x) * 2);
+
+			block[16 * 0 + y * 4 + x] = (int)(xr & 0xFFFF);
+			block[16 * 1 + y * 4 + x] = (int)(xg & 0xFFFF);
+			block[16 * 2 + y * 4 + x] = (int)(xb & 0xFFFF);
+			block[16 * 3 + y * 4 + x] = 0;
+		}
+	}
+}
+
+inline void load_variable_block_interleaved(float pixels[], uniform rgba_surface src[], int xx, int yy, uniform int width, uniform int height)
+{
+	uniform int pitch = width * height;
+	for (uniform int y = 0; y < height; y++)
+	{
+		for (uniform int x = 0; x < width; x++)
+		{
+			uint32 rgba = gather_uint((uint32*)src->ptr, ((yy * height + y)*src->stride + (xx * width + x) * 4)/4);
+
+			set_pixel(pixels, 0, x, y, (int)((rgba >> 0) & 255));
+			set_pixel(pixels, 1, x, y, (int)((rgba >> 8) & 255));
+			set_pixel(pixels, 2, x, y, (int)((rgba >> 16) & 255));
+			set_pixel(pixels, 3, x, y, (int)((rgba >> 24) & 255));
+		}
+	}
+}
+
+///////////////////////////////////////////////////////////
+// Store data.
+//
+
+inline void store_data(uniform uint8 dst[], int width, int xx, uniform int yy, uint32 data[], int data_size)
+{
+	for (uniform int k=0; k<data_size; k++)
+	{
+		uniform uint32* dst_ptr = (uint32*)&dst[(yy)*width*data_size];
+		scatter_uint(dst_ptr, xx*data_size+k, data[k]);
+	}
+}

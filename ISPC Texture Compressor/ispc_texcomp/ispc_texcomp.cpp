@@ -21,6 +21,8 @@
 
 #include "ispc_texcomp.h"
 #include "kernel_ispc.h"
+#include "kernel_bptc_ispc.h"
+#include "kernel_etc_ispc.h"
 #include "memory.h" // memcpy
 
 void GetProfile_ultrafast(bc7_enc_settings* settings)

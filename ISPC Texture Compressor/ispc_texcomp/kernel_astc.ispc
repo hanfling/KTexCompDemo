@@ -1,4 +1,8 @@
 //
+// ASTC encoding implementation.
+//
+
+//
 //  Copyright (c) 2016 Intel Corporation
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy of this 
@@ -19,120 +23,10 @@
 //  OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 
-typedef int8 int8_t;
-typedef int32 int32_t;
-typedef int64 int64_t;
-
-typedef unsigned int8 uint8_t;
-typedef unsigned int32 uint32_t;
-typedef unsigned int64 uint64_t;
-
-///////////////////////////
-//   generic helpers
-
-void swap(float& a, float& b)
-{
-	int t = a;
-	a = b; b = t;
-}
-
-void swap(int& a, int& b)
-{
-	int t = a;
-	a = b; b = t;
-}
-
-void swap(uint32_t& a, uint32_t& b)
-{
-	uint32_t t = a;
-	a = b; b = t;
-}
-
-void swap(uint8_t& a, uint8_t& b)
-{
-	uint8_t t = a;
-	a = b; b = t;
-}
-
-inline float sq(float v)
-{
-	return v*v;
-}
-
-inline float clamp(float v, int a, int b)
-{
-	return clamp(v, (float)a, (float)b);
-}
-
-inline float dot3(float a[3], float b[3])
-{
-	return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
-}
-
-inline float dot4(float a[4], float b[4])
-{
-	return a[0] * b[0] + a[1] * b[1] + a[2] * b[2] + a[3] * b[3];
-}
-
-// the following helpers isolate performance warnings
-
-inline uint32_t gather_uint(const uniform uint32_t* const uniform ptr, int idx)
-{
-	return ptr[idx]; // (perf warning expected)
-}
-
-inline float gather_float(uniform float* uniform ptr, int idx)
-{
-	return ptr[idx]; // (perf warning expected)
-}
-
-inline float gather_float(varying float* uniform ptr, int idx)
-{
-	return ptr[idx]; // (perf warning expected)
-}
-
-inline void scatter_uint(uniform uint32_t* ptr, int idx, uint32_t value)
-{
-	ptr[idx] = value; // (perf warning expected)
-}
-
-inline void scatter_float(uniform float* uniform ptr, int idx, float value)
-{
-	ptr[idx] = value; // (perf warning expected)
-}
-
-inline void scatter_float(varying float* uniform ptr, int idx, float value)
-{
-	ptr[idx] = value; // (perf warning expected)
-}
+#include "kernel_shared.isph"
 
 ///////////////////////////////////////////////////////////
 //				 ASTC shared functions
-
-struct rgba_surface
-{
-	uint8_t* ptr;
-	int width, height, stride;
-};
-
-inline void set_pixel(float pixels[], uniform int p, uniform int x, uniform int y, float value);
-
-inline void load_block_interleaved(float pixels[], uniform rgba_surface src[], int xx, int yy, uniform int width, uniform int height)
-{
-	uniform int pitch = width * height;
-	for (uniform int y = 0; y < height; y++)
-	{
-		for (uniform int x = 0; x < width; x++)
-		{
-			uint32_t rgba = gather_uint((uint32_t*)src->ptr, ((yy * height + y)*src->stride + (xx * width + x) * 4)/4);
-
-			set_pixel(pixels, 0, x, y, (int)((rgba >> 0) & 255));
-			set_pixel(pixels, 1, x, y, (int)((rgba >> 8) & 255));
-			set_pixel(pixels, 2, x, y, (int)((rgba >> 16) & 255));
-			set_pixel(pixels, 3, x, y, (int)((rgba >> 24) & 255));
-		}
-	}
-}
 
 struct astc_enc_settings
 {
@@ -148,22 +42,6 @@ export uniform int get_programCount()
 {
 	return programCount;
 } 
-
-inline float get_pixel(float pixels[], uniform int p, uniform int x, uniform int y)
-{
-	uniform static const int ystride = 8;
-	uniform static const int pstride = 64;
-
-	return pixels[pstride * p + ystride * y + x];
-}
-
-inline void set_pixel(float pixels[], uniform int p, uniform int x, uniform int y, float value)
-{
-	uniform static const int ystride = 8;
-	uniform static const int pstride = 64;
-
-	pixels[pstride * p + ystride * y + x] = value;
-}
 
 struct pixel_set
 {
@@ -275,49 +153,6 @@ inline void compute_covar_dc(float covar[], float dc[], pixel_set block[], bool 
 	covar_from_stats(covar, stats, channels);
 	for (uniform int p = 0; p < channels; p++)
 		dc[p] = stats[10 + p] / stats[14];
-}
-
-inline void ssymv3(float a[4], float covar[10], float b[4])
-{
-	a[0] = covar[0] * b[0] + covar[1] * b[1] + covar[2] * b[2];
-	a[1] = covar[1] * b[0] + covar[4] * b[1] + covar[5] * b[2];
-	a[2] = covar[2] * b[0] + covar[5] * b[1] + covar[7] * b[2];
-}
-
-inline void ssymv4(float a[4], float covar[10], float b[4])
-{
-	a[0] = covar[0] * b[0] + covar[1] * b[1] + covar[2] * b[2] + covar[3] * b[3];
-	a[1] = covar[1] * b[0] + covar[4] * b[1] + covar[5] * b[2] + covar[6] * b[3];
-	a[2] = covar[2] * b[0] + covar[5] * b[1] + covar[7] * b[2] + covar[8] * b[3];
-	a[3] = covar[3] * b[0] + covar[6] * b[1] + covar[8] * b[2] + covar[9] * b[3];
-}
-
-inline void compute_axis(float axis[4], float covar[10], uniform const int powerIterations, uniform int channels)
-{
-	float vec[4] = { 1, 1, 1, 1 };
-
-	for (uniform int i = 0; i < powerIterations; i++)
-	{
-		if (channels == 3) ssymv3(axis, covar, vec);
-		if (channels == 4) ssymv4(axis, covar, vec);
-
-		for (uniform int p = 0; p < channels; p++)
-			vec[p] = axis[p];
-
-		if (i % 2 == 1) // renormalize every other iteration
-		{
-			float norm_sq = 0;
-			for (uniform int p = 0; p < channels; p++)
-				norm_sq += axis[p] * axis[p];
-
-			float rnorm = rsqrt(norm_sq);
-			for (uniform int p = 0; p < channels; p++)
-				vec[p] *= rnorm;
-		}
-	}
-
-	for (uniform int p = 0; p < channels; p++)
-		axis[p] = vec[p];
 }
 
 void compute_pca_endpoints(float ep[8], pixel_set block[], bool zero_based, uniform int channels)
@@ -477,7 +312,7 @@ struct astc_rank_state
 	float scale_error[7][7]; // 2x2 to 8x8
 
 	float best_scores[64];
-	uint32_t best_modes[64];
+	uint32 best_modes[64];
 
 	// settings
 	uniform int block_width;
@@ -819,7 +654,7 @@ float estimate_error(astc_rank_state state[], uniform astc_mode mode[])
 	return error;
 }
 
-void insert_element(astc_rank_state state[], float error, uint32_t packed_mode, float threshold_error[])
+void insert_element(astc_rank_state state[], float error, uint32 packed_mode, float threshold_error[])
 {
 	float max_error = 0;
 
@@ -838,7 +673,7 @@ void insert_element(astc_rank_state state[], float error, uint32_t packed_mode, 
 }
 
 uniform static const int packed_modes_count = 3334;
-uniform static const uint32_t packed_modes[3334] =
+uniform static const uint32 packed_modes[3334] =
 {
 	0x0006D400, 0x0016D340, 0x0026D380, 0x0036CDC0, 0x00469400, 0x00569401, 0x00668702, 0x00769440,
 	0x00868D41, 0x00969480, 0x00A68D81, 0x00B693C0, 0x00C688C1, 0x00D4D400, 0x00E4D401, 0x00F4C702,
@@ -1259,12 +1094,12 @@ uniform static const uint32_t packed_modes[3334] =
 	0xD00834F6, 0xD01834F7, 0xD02833F8, 0xD03831F9, 0xD04830FA, 0xD0582EFB,
 };
 
-uniform int get_bits(uniform uint32_t value, uniform int from, uniform int to)
+uniform int get_bits(uniform uint32 value, uniform int from, uniform int to)
 {
 	return (value >> from) & ((1 << (to + 1 - from)) - 1);
 }
 
-void load_mode_parameters(uniform astc_mode* uniform mode, uniform uint32_t packed_mode)
+void load_mode_parameters(uniform astc_mode* uniform mode, uniform uint32 packed_mode)
 {    
 	mode->width = 2 + get_bits(packed_mode, 13, 15); // 2..8 <= 2^3
 	mode->height = 2 + get_bits(packed_mode, 16, 18); // 2..8 <= 2^3
@@ -1279,7 +1114,7 @@ void load_mode_parameters(uniform astc_mode* uniform mode, uniform uint32_t pack
 	mode->endpoint_range = get_bits(packed_mode, 8, 12); // 0..20 <= 2^5
 }
 
-export void astc_rank_ispc(uniform rgba_surface src[], uniform int xx, uniform int yy, uniform uint32_t mode_buffer[], uniform astc_enc_settings settings[])
+export void astc_rank_ispc(uniform rgba_surface src[], uniform int xx, uniform int yy, uniform uint32 mode_buffer[], uniform astc_enc_settings settings[])
 {
 	int tex_width = src->width / settings->block_width;
 	if (xx + programIndex >= tex_width)
@@ -1294,7 +1129,7 @@ export void astc_rank_ispc(uniform rgba_surface src[], uniform int xx, uniform i
 
 	assert(state->fastSkipTreshold <= 64);
 
-	load_block_interleaved(state->pixels, src, xx + programIndex, yy, state->block_width, state->block_height);
+	load_variable_block_interleaved(state->pixels, src, xx + programIndex, yy, state->block_width, state->block_height);
 	if (settings->channels == 3)
 		clear_alpha(state->pixels, state->block_width, state->block_height);
 
@@ -1305,7 +1140,7 @@ export void astc_rank_ispc(uniform rgba_surface src[], uniform int xx, uniform i
 
 	for (uniform int id = 0; id < packed_modes_count; id++)
 	{
-		uniform uint32_t packed_mode = packed_modes[id];
+		uniform uint32 packed_mode = packed_modes[id];
 
 		uniform astc_mode _mode;
 		uniform astc_mode* uniform mode = &_mode;
@@ -1352,7 +1187,7 @@ struct astc_block
 	uniform int height;
 	uniform bool dual_plane;
 	int weight_range;
-	uint8_t weights[64];
+	uint8 weights[64];
 	int color_component_selector;
 
 	uniform int partitions;
@@ -1361,14 +1196,14 @@ struct astc_block
 	uniform int channels;
 	int color_endpoint_modes[4];
 	int endpoint_range;
-	uint8_t endpoints[18];
+	uint8 endpoints[18];
 };
 
 struct astc_enc_state
 {
 	float pixels[256];
 	float scaled_pixels[256];
-	uint32_t data[4];
+	uint32 data[4];
 
 	// settings
 	uniform int block_width;
@@ -1512,7 +1347,7 @@ inline void apply_blue_contract(int& r, int& g, int& b)
 	g = (g + b) >> 1;
 }
 
-void decode_endpoints(float endpoints[8], uint8_t coded_endpoints[], int mode)
+void decode_endpoints(float endpoints[8], uint8 coded_endpoints[], int mode)
 {    
 	if ((mode % 4) == 2)
 	{
@@ -1582,12 +1417,12 @@ void decode_endpoints(float endpoints[8], uint8_t coded_endpoints[], int mode)
 	}
 }
 
-void dequant_decode_endpoints(float endpoints[8], uint8_t block_endpoints[], int mode, int range)
+void dequant_decode_endpoints(float endpoints[8], uint8 block_endpoints[], int mode, int range)
 {
 	int levels = get_levels(range);
 	int num_cem_pairs = 1 + mode / 4;
 
-	uint8_t dequant_endpoints[8];
+	uint8 dequant_endpoints[8];
 	for (uniform int k = 0; k < 2 * num_cem_pairs; k++)
 	{
 		dequant_endpoints[k] = (int)(((int)block_endpoints[k]) * 255.0f / (levels - 1) + 0.5);
@@ -1596,7 +1431,7 @@ void dequant_decode_endpoints(float endpoints[8], uint8_t block_endpoints[], int
 	decode_endpoints(endpoints, dequant_endpoints, mode);
 }
 
-bool compare_endpoints(uint8_t endpoints[8], astc_block block[])
+bool compare_endpoints(uint8 endpoints[8], astc_block block[])
 {
 	int sum = 0;
 	for (uniform int p = 0; p < 3; p++)
@@ -1627,7 +1462,7 @@ bool compare_endpoints(uint8_t endpoints[8], astc_block block[])
 	return sum > 0;
 }
 
-void reorder_endpoints(uint8_t endpoints[8], astc_block block[], bool blue_contract)
+void reorder_endpoints(uint8 endpoints[8], astc_block block[], bool blue_contract)
 {    
 	if (compare_endpoints(endpoints, block) == !blue_contract)
 	{
@@ -1952,7 +1787,7 @@ void ls_refine(float endpoints[], float scaled_pixels[], astc_block block[])
 	}
 }
 
-float optimize_alt_plane(uint8_t alt_weights[], float scaled_pixels[], astc_block block[])
+float optimize_alt_plane(uint8 alt_weights[], float scaled_pixels[], astc_block block[])
 {
 	int ccs = block->color_component_selector;
 
@@ -2051,10 +1886,10 @@ void optimize_block(float scaled_pixels[], astc_block block[], astc_enc_state st
     
 	if (block->dual_plane)
 	{
-		uint8_t alt_weights[64];
+		uint8 alt_weights[64];
 		optimize_alt_plane(alt_weights, scaled_pixels, block);
 
-		uint8_t block_weights[64];
+		uint8 block_weights[64];
 		for (uniform int i = 0; i < block->width * block->height; i++)
 		{
 			block_weights[i] = block->weights[i];
@@ -2091,8 +1926,8 @@ float measure_error(astc_block block[], astc_enc_state state[])
 	uniform int Ds = (1024 + state->block_width / 2) / (state->block_width - 1);
 	uniform int Dt = (1024 + state->block_height / 2) / (state->block_height - 1);
 
-	uint8_t main_weights[64];
-	uint8_t alt_weights[64];
+	uint8 main_weights[64];
+	uint8 alt_weights[64];
 
 	for (uniform int i = 0; i < num_weights; i++)
 		main_weights[i] = block_weights[i];
@@ -2201,7 +2036,7 @@ void code_block(astc_block block[])
 	}
 }
 
-extern "C" void pack_block_c(uniform uint32_t data[4], uniform astc_block block[]);
+extern "C" void pack_block_c(uniform uint32 data[4], uniform astc_block block[]);
 
 void pack_block(astc_block block[], astc_enc_state state[])
 {
@@ -2230,7 +2065,7 @@ void pack_block(astc_block block[], astc_enc_state state[])
 		for (uniform int i = 0; i < 8; i++)
 			ublock.endpoints[i] = extract(block->endpoints[i], instance);
 
-		uniform uint32_t data[4];
+		uniform uint32 data[4];
 		pack_block_c(data, &ublock);
         
 		for (uniform int i = 0; i < 4; i++)
@@ -2238,12 +2073,12 @@ void pack_block(astc_block block[], astc_enc_state state[])
 	}
 }
 
-int get_bits(uint32_t value, uniform int from, uniform int to)
+int get_bits(uint32 value, uniform int from, uniform int to)
 {
 	return (value >> from) & ((1 << (to + 1 - from)) - 1);
 }
 
-void load_block_parameters(astc_block block[], uint32_t mode, uniform astc_enc_context ctx[])
+void load_block_parameters(astc_block block[], uint32 mode, uniform astc_enc_context ctx[])
 {
 	// uniform parameters
 	block->width = ctx->width;
@@ -2261,11 +2096,11 @@ void load_block_parameters(astc_block block[], uint32_t mode, uniform astc_enc_c
 	block->endpoint_range = get_bits(mode, 8, 12); // 0..20 <= 2^5
 }
 
-export void astc_encode_ispc(uniform rgba_surface src[], uniform float block_scores[], uniform uint8_t dst[], uniform uint64_t list[], uniform astc_enc_context list_context[], uniform astc_enc_settings settings[])
+export void astc_encode_ispc(uniform rgba_surface src[], uniform float block_scores[], uniform uint8 dst[], uniform uint64 list[], uniform astc_enc_context list_context[], uniform astc_enc_settings settings[])
 {
-	uint64_t entry = list[programIndex];
-	uint32_t offset = entry >> 32;
-	uint32_t mode = (entry & 0xFFFFFFFF);
+	uint64 entry = list[programIndex];
+	uint32 offset = entry >> 32;
+	uint32 mode = (entry & 0xFFFFFFFF);
 	if (mode == 0)
 		return;
 	int yy = offset >> 16;
@@ -2280,7 +2115,7 @@ export void astc_encode_ispc(uniform rgba_surface src[], uniform float block_sco
 	state->block_height = settings->block_height;
 	state->refineIterations = settings->refineIterations;
 
-	load_block_interleaved(state->pixels, src, xx, yy, state->block_width, state->block_height);
+	load_variable_block_interleaved(state->pixels, src, xx, yy, state->block_width, state->block_height);
 
 	astc_block _block;
 	varying astc_block* uniform block = &_block;
@@ -2311,6 +2146,6 @@ export void astc_encode_ispc(uniform rgba_surface src[], uniform float block_sco
 		scatter_float(block_scores, yy * tex_width + xx, error);
 
 		for (uniform int i = 0; i < 4; i++)
-			scatter_uint((uint32_t*)dst, (yy * tex_width + xx) * 4 + i, state->data[i]);
+			scatter_uint((uint32*)dst, (yy * tex_width + xx) * 4 + i, state->data[i]);
 	}
 }
