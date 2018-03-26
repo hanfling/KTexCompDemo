@@ -38,7 +38,7 @@ Intel Developer Zone and the included [Technical Paper](./ISPC%20Texture%20Compr
 
 ## License
 
-ISPC Texture Compressor is distributed under the MIT License, which is also known under the name X11 License. The full License is included inside license.txt.
+ISPC Texture Compressor is distributed under the [MIT License](https://opensource.org/licenses/MIT).
 
 ## Build Instructions
 
