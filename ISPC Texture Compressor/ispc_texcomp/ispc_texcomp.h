@@ -124,6 +124,7 @@ extern "C" void ReplicateBorders(rgba_surface* dst_slice, const rgba_surface* sr
 	 - dst buffer must be allocated with enough space for the compressed texture:
 	   4 bytes/block for BC1/BC4/ETC1, 8 bytes/block for BC2/BC3/BC5/BC6H/BC7/ASTC
 	   the blocks are stored in raster scan order (natural CPU texture layout)
+	 - BC6H input needs to be non negative.
 	 - you can use GetProfile_* functions to select various speed/quality tradeoffs.
 	 - the RGB profiles are slightly faster as they ignore the alpha channel
 */
