@@ -138,3 +138,128 @@ extern "C" void CompressBlocksBC6H(const rgba_surface* src, uint8_t* dst, bc6h_e
 extern "C" void CompressBlocksBC7(const rgba_surface* src, uint8_t* dst, bc7_enc_settings* settings);
 extern "C" void CompressBlocksETC1(const rgba_surface* src, uint8_t* dst, etc_enc_settings* settings);
 extern "C" void CompressBlocksASTC(const rgba_surface* src, uint8_t* dst, astc_enc_settings* settings);
+
+
+/*
+	Prototyping for new API. Subject to frequent changes for now.
+	
+	Ideas:
+		- Add size parameters similiar to snprintf vs. sprintf.
+		- Add a return value, to indicate wrong input/output memory size or internal errors which are currently asserts.
+		- Interface for BC6H or floating point input in general could have a version which does clamping, and one which doesnt.
+		  - There is a closed thread in the bugtracker requesting input should always be clamped, but was rejected due to eventual
+			  performance concerns. This needs some benchmarking, but my expectation is that it would at most would only matter for ultrafast profiles.
+		- Use compiler pragmas/directives to nail down alignment of ISPCTC_Surface_* structures, so these remain compatible between with different alignment
+		  settings (they might actually already be implicit safe due to how they would be aligned).
+		- Add settings/profiles where missing.
+		- Choose a suitable approach for dealing with profiles:
+		  a) Only expose generic options as ultrafast/slow/etc. to user.
+			b) Expose full control over individual parts of the compression profile
+			   - Requires proper documentation
+				 - Deal with future changes/addition to the profile structures.
+				   - One way could be to expose function which returns the size of the profile struct used by the current build of the library beeing used
+					   and provide wrapper functions to set individual members of the profile struct. That way code using the library could be written which remains
+						 fully functional regardless of changes of the settings struct inside the library itself.
+		- Expose control over the error metrics used for the compression:
+		  - Explicit control.
+			  - Weight of individual axis as exposed in s3tc.lib or squish
+				  - e.g. using relativ luminance weights for ITU-R BT.709/sRGB primaries (0.2126,0.7152,0.0722) for linear data or for images encoded in sRGB space
+					  using using an linear approximation of weights to relative luminance calculation of sRGB (0.309 0.609,0.082)
+						[See: Burger, Burge: Principles of Digital Image Processing: Core Algorithms, Springer Verlag London Limited, 2009, p. 111.].
+				  - Weight of alpha could be used for block compression codecs where alpha is not independent (e.g. BC7).
+		  - This could also be generic, as in profiles for, lets say UI textures in sRGB or linearized sRGB gamut, for diffuse, roughness, ao, which may or may
+			  not have more specific concerns about which errors are more important to minimize for the usage case.
+
+*/
+
+#define ISPCTC_DELARE_SURFACE(name,type) \
+	struct name \
+	{ \
+		type* Ptr; \
+		int32_t Width; \
+		int32_t Height; \
+		int32_t Stride; \
+	};
+
+// 8 bit unsigned int/component
+ISPCTC_DELARE_SURFACE(ISPCTC_Surface_R8,uint8_t)
+ISPCTC_DELARE_SURFACE(ISPCTC_Surface_RG8,uint8_t)
+ISPCTC_DELARE_SURFACE(ISPCTC_Surface_RGBA8,uint8_t)
+
+// 8 bit signed int/component
+ISPCTC_DELARE_SURFACE(ISPCTC_Surface_R8S,int8_t)
+ISPCTC_DELARE_SURFACE(ISPCTC_Surface_RG8S,int8_t)
+
+// 16 bit unsigned int/component
+ISPCTC_DELARE_SURFACE(ISPCTC_Surface_R16,uint16_t)
+ISPCTC_DELARE_SURFACE(ISPCTC_Surface_RG16,uint16_t)
+ISPCTC_DELARE_SURFACE(ISPCTC_Surface_RGBA16,uint16_t)
+
+// 16 bit signed int/component
+ISPCTC_DELARE_SURFACE(ISPCTC_Surface_R16S,int16_t)
+ISPCTC_DELARE_SURFACE(ISPCTC_Surface_RG16S,int16_t)
+
+// 16 bit float/component (uint16_t in lack of buildin type).
+ISPCTC_DELARE_SURFACE(ISPCTC_Surface_R16F,uint16_t)
+ISPCTC_DELARE_SURFACE(ISPCTC_Surface_RG16F,uint16_t)
+ISPCTC_DELARE_SURFACE(ISPCTC_Surface_RGBA16F,uint16_t)
+
+// 32 bit float/component
+ISPCTC_DELARE_SURFACE(ISPCTC_Surface_R32F,float)
+ISPCTC_DELARE_SURFACE(ISPCTC_Surface_RG32F,float)
+ISPCTC_DELARE_SURFACE(ISPCTC_Surface_RGBA32F,float)
+
+extern "C"
+{
+	// BC1.
+	void ISPCTC_CompressBlocksBC1_RGBA8( const ISPCTC_Surface_RGBA8* InputSurface, uint8_t* RawOutput );
+	//void ISPCTC_CompressBlocksBC1_RGBA16( const ISPCTC_Surface_RGBA16* InputSurface, uint8_t* RawOutput );
+	//void ISPCTC_CompressBlocksBC1_RGBA32F( const ISPCTC_Surface_RGBA32F* InputSurface, uint8_t* RawOutput );
+
+	// BC2.
+	void ISPCTC_CompressBlocksBC2_RGBA8( const ISPCTC_Surface_RGBA8* InputSurface, uint8_t* RawOutput );
+	//void ISPCTC_CompressBlocksBC2_RGBA16( const ISPCTC_Surface_RGBA16* InputSurface, uint8_t* RawOutput );
+	//void ISPCTC_CompressBlocksBC2_RGBA32F( const ISPCTC_Surface_RGBA32F* InputSurface, uint8_t* RawOutput );
+
+	// BC3.
+	void ISPCTC_CompressBlocksBC3_RGBA8( const ISPCTC_Surface_RGBA8* InputSurface, uint8_t* RawOutput );
+	//void ISPCTC_CompressBlocksBC3_RGBA16( const ISPCTC_Surface_RGBA16* InputSurface, uint8_t* RawOutput );
+	//void ISPCTC_CompressBlocksBC3_RGBA32F( const ISPCTC_Surface_RGBA32F* InputSurface, uint8_t* RawOutput );
+
+	// BC4.
+	void ISPCTC_CompressBlocksBC4_R8( const ISPCTC_Surface_R8* InputSurface, uint8_t* RawOutput );
+	//void ISPCTC_CompressBlocksBC4_R16( const ISPCTC_Surface_R16* InputSurface, uint8_t* RawOutput );
+	//void ISPCTC_CompressBlocksBC4_R32F( const ISPCTC_Surface_R32F* InputSurface, uint8_t* RawOutput );
+	//void ISPCTC_CompressBlocksBC4S_R8S( const ISPCTC_Surface_R8S* InputSurface, uint8_t* RawOutput );
+	//void ISPCTC_CompressBlocksBC4S_R16S( const ISPCTC_Surface_R16S* InputSurface, uint8_t* RawOutput );
+	//void ISPCTC_CompressBlocksBC4S_R32F( const ISPCTC_Surface_R32F* InputSurface, uint8_t* RawOutput );
+
+	// BC5.
+	void ISPCTC_CompressBlocksBC5_RG8( const ISPCTC_Surface_RG8* InputSurface, uint8_t* RawOutput );
+	//void ISPCTC_CompressBlocksBC5_R16( const ISPCTC_Surface_RG16* InputSurface, uint8_t* RawOutput );
+	//void ISPCTC_CompressBlocksBC5_R32F( const ISPCTC_Surface_RG32F* InputSurface, uint8_t* RawOutput );
+	//void ISPCTC_CompressBlocksBC5S_R8S( const ISPCTC_Surface_RG8S* InputSurface, uint8_t* RawOutput );
+	//void ISPCTC_CompressBlocksBC5S_R16S( const ISPCTC_Surface_RG16S* InputSurface, uint8_t* RawOutput );
+	//void ISPCTC_CompressBlocksBC5S_R32F( const ISPCTC_Surface_RG32F* InputSurface, uint8_t* RawOutput );
+
+	// BC6H.
+	void ISPCTC_CompressBlocksBC6H_RGBA16F(const ISPCTC_Surface_RGBA16F* InputSurface, uint8_t* RawOutput, bc6h_enc_settings* EncSettings );
+	//void ISPCTC_CompressBlocksBC6H_RGBA32F(const ISPCTC_Surface_RGBA32F* InputSurface, uint8_t* RawOutput, bc6h_enc_settings* EncSettings );
+	//void ISPCTC_CompressBlocksBC6HS_RGBA16F(const ISPCTC_Surface_RGBA16F* InputSurface, uint8_t* RawOutput, bc6h_enc_settings* EncSettings );
+	//void ISPCTC_CompressBlocksBC6HS_RGBA32F(const ISPCTC_Surface_RGBA32F* InputSurface, uint8_t* RawOutput, bc6h_enc_settings* EncSettings );
+
+	// BC7.
+	void ISPCTC_CompressBlocksBC7_RGBA8( const ISPCTC_Surface_RGBA8* InputSurface, uint8_t* RawOutput, bc7_enc_settings* EncSettings );
+	//void ISPCTC_CompressBlocksBC1_RGBA16( const ISPCTC_Surface_RGBA16* InputSurface, uint8_t* RawOutput, bc7_enc_settings* EncSettings );
+	//void ISPCTC_CompressBlocksBC1_RGBA32F( const ISPCTC_Surface_RGBA32F* InputSurface, uint8_t* RawOutput, bc7_enc_settings* EncSettings );
+
+	// ETC1.
+	void ISPCTC_CompressBlocksETC1_RGBA8( const ISPCTC_Surface_RGBA8* InputSurface, uint8_t* RawOutput, etc_enc_settings* EncSettings );
+	//void ISPCTC_CompressBlocksBC1_RGBA16( const ISPCTC_Surface_RGBA16* InputSurface, uint8_t* RawOutput, etc_enc_settings* EncSettings );
+	//void ISPCTC_CompressBlocksBC1_RGBA32F( const ISPCTC_Surface_RGBA32F* InputSurface, uint8_t* RawOutput, etc_enc_settings* EncSettings );
+
+	// ASTC.
+	void ISPCTC_CompressBlocksASTC_LDR_RGBA8( const ISPCTC_Surface_RGBA8* InputSurface, uint8_t* RawOutput, astc_enc_settings* EncSettings );
+	//void ISPCTC_CompressBlocksASTC_LDR_RGBA16( const ISPCTC_Surface_RGBA16* InputSurface, uint8_t* RawOutput, astc_enc_settings* EncSettings );
+	//void ISPCTC_CompressBlocksASTC_LDR_RGBA32F( const ISPCTC_Surface_RGBA32F* InputSurface, uint8_t* RawOutput, astc_enc_settings* EncSettings );
+}

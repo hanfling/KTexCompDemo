@@ -508,34 +508,40 @@ void astc_encode(const rgba_surface* src, float* block_scores, uint8_t* dst, uin
 
 void CompressBlocksASTC(const rgba_surface* src, uint8_t* dst, astc_enc_settings* settings)
 {
-	assert(src->height % settings->block_height == 0);
-	assert(src->width % settings->block_width == 0);
+	ISPCTC_CompressBlocksASTC_LDR_RGBA8( (const ISPCTC_Surface_RGBA8*)src, dst, settings );
+}
+
+// ASTC.
+void ISPCTC_CompressBlocksASTC_LDR_RGBA8( const ISPCTC_Surface_RGBA8* InputSurface, uint8_t* RawOutput, astc_enc_settings* EncSettings )
+{
+	assert(InputSurface->Height % EncSettings->block_height == 0);
+	assert(InputSurface->Width % EncSettings->block_width == 0);
     
-	assert(settings->block_height <= 8);
-	assert(settings->block_width <= 8);
+	assert(EncSettings->block_height <= 8);
+	assert(EncSettings->block_width <= 8);
     
-	int tex_width = src->width / settings->block_width;
+	int tex_width = InputSurface->Width / EncSettings->block_width;
 	int programCount = ispc::get_programCount();
 
-	std::vector<float> block_scores(tex_width * src->height / settings->block_height);
+	std::vector<float> block_scores(tex_width * InputSurface->Height / EncSettings->block_height);
 
-	for (int yy = 0; yy < src->height / settings->block_height; yy++)
+	for (int yy = 0; yy < InputSurface->Height / EncSettings->block_height; yy++)
 		for (int xx = 0; xx < tex_width; xx++)
 			block_scores[yy * tex_width + xx] = std::numeric_limits<float>::infinity();
 
 	int mode_list_size = 3334;
 	int list_size = programCount;
 	std::vector<uint64_t> mode_lists(list_size * mode_list_size);
-	std::vector<uint32_t> mode_buffer(programCount * settings->fastSkipTreshold);
+	std::vector<uint32_t> mode_buffer(programCount * EncSettings->fastSkipTreshold);
 
-	for (int yy = 0; yy < src->height / settings->block_height; yy++)
+	for (int yy = 0; yy < InputSurface->Height / EncSettings->block_height; yy++)
 	{
 		for (int _x = 0; _x < (tex_width + programCount - 1) / programCount; _x++)
 		{
 			int xx = _x * programCount;
-			atsc_rank(src, xx, yy, mode_buffer.data(), settings);
+			atsc_rank((const rgba_surface*)InputSurface, xx, yy, mode_buffer.data(), EncSettings);
         
-			for (int i = 0; i < settings->fastSkipTreshold; i++)
+			for (int i = 0; i < EncSettings->fastSkipTreshold; i++)
 			{
 				for (int k = 0; k < programCount; k++)
 				{
@@ -558,7 +564,7 @@ void CompressBlocksASTC(const rgba_surface* src, uint8_t* dst, astc_enc_settings
 					{
 						mode_list[0] = (uint64_t(offset) << 32) + mode;
 
-						astc_encode(src, block_scores.data(), dst, mode_list, settings);
+						astc_encode((const rgba_surface*)InputSurface, block_scores.data(), RawOutput, mode_list, EncSettings);
 						memset(mode_list, 0, list_size * sizeof(uint64_t));
 					}                
 				}
@@ -573,7 +579,9 @@ void CompressBlocksASTC(const rgba_surface* src, uint8_t* dst, astc_enc_settings
 			continue;
 		mode_list[0] = 0;
 
-		astc_encode(src, block_scores.data(), dst, mode_list, settings);
+		astc_encode((const rgba_surface*)InputSurface, block_scores.data(), RawOutput, mode_list, EncSettings);
 		memset(mode_list, 0, list_size * sizeof(uint64_t));
 	}
 }
+//void ISPCTC_CompressBlocksASTC_LDR_RGBA16( const ISPCTC_Surface_RGBA16* InputSurface, uint8_t* RawOutput, astc_enc_settings* EncSettings );
+//void ISPCTC_CompressBlocksASTC_LDR_RGBA32F( const ISPCTC_Surface_RGBA32F* InputSurface, uint8_t* RawOutput, astc_enc_settings* EncSettings );
