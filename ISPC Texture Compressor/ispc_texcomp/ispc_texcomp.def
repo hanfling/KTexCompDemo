@@ -29,12 +29,12 @@ EXPORTS
 	GetProfile_astc_alpha_fast
 	GetProfile_astc_alpha_slow
 	ReplicateBorders
-	ISPCTC_CompressBlocksBC1_RGBA8
-	ISPCTC_CompressBlocksBC2_RGBA8
-	ISPCTC_CompressBlocksBC3_RGBA8
-	ISPCTC_CompressBlocksBC4_R8
-	ISPCTC_CompressBlocksBC5_RG8
-	ISPCTC_CompressBlocksBC6H_RGBA16F
-	ISPCTC_CompressBlocksBC7_RGBA8
-	ISPCTC_CompressBlocksETC1_RGBA8
-	ISPCTC_CompressBlocksASTC_LDR_RGBA8
+	ISPCTC_BC1_Compress_RGBA8
+	ISPCTC_BC2_Compress_RGBA8
+	ISPCTC_BC3_Compress_RGBA8
+	ISPCTC_BC4_Compress_R8
+	ISPCTC_BC5_Compress_RG8
+	ISPCTC_BC6H_Compress_RGBA16F
+	ISPCTC_BC7_Compress_RGBA8
+	ISPCTC_ETC1_Compress_RGBA8
+	ISPCTC_ASTC_CompressLDR_RGBA8

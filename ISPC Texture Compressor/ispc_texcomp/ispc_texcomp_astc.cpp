@@ -508,11 +508,11 @@ void astc_encode(const rgba_surface* src, float* block_scores, uint8_t* dst, uin
 
 void CompressBlocksASTC(const rgba_surface* src, uint8_t* dst, astc_enc_settings* settings)
 {
-	ISPCTC_CompressBlocksASTC_LDR_RGBA8( (const ISPCTC_Surface_RGBA8*)src, dst, settings );
+	ISPCTC_ASTC_CompressLDR_RGBA8( (const ISPCTC_Surface_RGBA8*)src, dst, settings );
 }
 
 // ASTC.
-void ISPCTC_CompressBlocksASTC_LDR_RGBA8( const ISPCTC_Surface_RGBA8* InputSurface, uint8_t* RawOutput, astc_enc_settings* EncSettings )
+void ISPCTC_ASTC_CompressLDR_RGBA8( const ISPCTC_Surface_RGBA8* InputSurface, uint8_t* RawOutput, astc_enc_settings* EncSettings )
 {
 	assert(InputSurface->Height % EncSettings->block_height == 0);
 	assert(InputSurface->Width % EncSettings->block_width == 0);
@@ -583,5 +583,5 @@ void ISPCTC_CompressBlocksASTC_LDR_RGBA8( const ISPCTC_Surface_RGBA8* InputSurfa
 		memset(mode_list, 0, list_size * sizeof(uint64_t));
 	}
 }
-//void ISPCTC_CompressBlocksASTC_LDR_RGBA16( const ISPCTC_Surface_RGBA16* InputSurface, uint8_t* RawOutput, astc_enc_settings* EncSettings );
-//void ISPCTC_CompressBlocksASTC_LDR_RGBA32F( const ISPCTC_Surface_RGBA32F* InputSurface, uint8_t* RawOutput, astc_enc_settings* EncSettings );
+//void ISPCTC_ASTC_CompressLDR_RGBA16( const ISPCTC_Surface_RGBA16* InputSurface, uint8_t* OutputBlocks, astc_enc_settings* EncSettings );
+//void ISPCTC_ASTC_CompressLDR_RGBA32F( const ISPCTC_Surface_RGBA32F* InputSurface, uint8_t* OutputBlocks, astc_enc_settings* EncSettings );

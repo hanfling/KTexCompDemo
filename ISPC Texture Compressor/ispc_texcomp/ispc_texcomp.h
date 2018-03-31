@@ -169,9 +169,21 @@ extern "C" void CompressBlocksASTC(const rgba_surface* src, uint8_t* dst, astc_e
 				  - Weight of alpha could be used for block compression codecs where alpha is not independent (e.g. BC7).
 		  - This could also be generic, as in profiles for, lets say UI textures in sRGB or linearized sRGB gamut, for diffuse, roughness, ao, which may or may
 			  not have more specific concerns about which errors are more important to minimize for the usage case.
-
+		- Decompression:
+		  - Expose control about rounding to integer types?
+			- Having the output surface implicit specify the width/height of input feels a little off.
+		- Choose a suitable approach to deal with non block sized input:
+		  a) Disallow, and eventually still provide the ReplicateBorders helper and add support for 8/16/128 bpp to it.
+			b) Allow/encourage
+			   - Stride could still be required to be a multiple of the block size.
+				 - For S3TC and power of two textures, the data inside a partial block can always be dublicated to the entire block to ensure weight of the original
+				   meaningful pixels is preserved, while for non power of texture (e.g. 1x3 pixels) this cannot be done, so masking could be applied to preserve the original
+					 weight in this case.
+				 - BC6H/BC7/ETC1 could be really clever about using that extra information.
+				 - This will affect quality for the highest mip levels.
 */
 
+// Surface definitions.
 #define ISPCTC_DELARE_SURFACE(name,type) \
 	struct name \
 	{ \
@@ -209,57 +221,114 @@ ISPCTC_DELARE_SURFACE(ISPCTC_Surface_R32F,float)
 ISPCTC_DELARE_SURFACE(ISPCTC_Surface_RG32F,float)
 ISPCTC_DELARE_SURFACE(ISPCTC_Surface_RGBA32F,float)
 
+// Compression API.
 extern "C"
 {
 	// BC1.
-	void ISPCTC_CompressBlocksBC1_RGBA8( const ISPCTC_Surface_RGBA8* InputSurface, uint8_t* RawOutput );
-	//void ISPCTC_CompressBlocksBC1_RGBA16( const ISPCTC_Surface_RGBA16* InputSurface, uint8_t* RawOutput );
-	//void ISPCTC_CompressBlocksBC1_RGBA32F( const ISPCTC_Surface_RGBA32F* InputSurface, uint8_t* RawOutput );
+	void ISPCTC_BC1_Compress_RGBA8( const ISPCTC_Surface_RGBA8* InputSurface, uint8_t* OutputBlocks );
+	//void ISPCTC_BC1_Compress_RGBA16( const ISPCTC_Surface_RGBA16* InputSurface, uint8_t* OutputBlocks );
+	//void ISPCTC_BC1_Compress_RGBA32F( const ISPCTC_Surface_RGBA32F* InputSurface, uint8_t* OutputBlocks );
 
 	// BC2.
-	void ISPCTC_CompressBlocksBC2_RGBA8( const ISPCTC_Surface_RGBA8* InputSurface, uint8_t* RawOutput );
-	//void ISPCTC_CompressBlocksBC2_RGBA16( const ISPCTC_Surface_RGBA16* InputSurface, uint8_t* RawOutput );
-	//void ISPCTC_CompressBlocksBC2_RGBA32F( const ISPCTC_Surface_RGBA32F* InputSurface, uint8_t* RawOutput );
+	void ISPCTC_BC2_Compress_RGBA8( const ISPCTC_Surface_RGBA8* InputSurface, uint8_t* OutputBlocks );
+	//void ISPCTC_BC2_Compress_RGBA16( const ISPCTC_Surface_RGBA16* InputSurface, uint8_t* OutputBlocks );
+	//void ISPCTC_BC2_Compress_RGBA32F( const ISPCTC_Surface_RGBA32F* InputSurface, uint8_t* OutputBlocks );
 
 	// BC3.
-	void ISPCTC_CompressBlocksBC3_RGBA8( const ISPCTC_Surface_RGBA8* InputSurface, uint8_t* RawOutput );
-	//void ISPCTC_CompressBlocksBC3_RGBA16( const ISPCTC_Surface_RGBA16* InputSurface, uint8_t* RawOutput );
-	//void ISPCTC_CompressBlocksBC3_RGBA32F( const ISPCTC_Surface_RGBA32F* InputSurface, uint8_t* RawOutput );
+	void ISPCTC_BC3_Compress_RGBA8( const ISPCTC_Surface_RGBA8* InputSurface, uint8_t* OutputBlocks );
+	//void ISPCTC_BC3_Compress_RGBA16( const ISPCTC_Surface_RGBA16* InputSurface, uint8_t* OutputBlocks );
+	//void ISPCTC_BC3_Compress_RGBA32F( const ISPCTC_Surface_RGBA32F* InputSurface, uint8_t* OutputBlocks );
 
 	// BC4.
-	void ISPCTC_CompressBlocksBC4_R8( const ISPCTC_Surface_R8* InputSurface, uint8_t* RawOutput );
-	//void ISPCTC_CompressBlocksBC4_R16( const ISPCTC_Surface_R16* InputSurface, uint8_t* RawOutput );
-	//void ISPCTC_CompressBlocksBC4_R32F( const ISPCTC_Surface_R32F* InputSurface, uint8_t* RawOutput );
-	//void ISPCTC_CompressBlocksBC4S_R8S( const ISPCTC_Surface_R8S* InputSurface, uint8_t* RawOutput );
-	//void ISPCTC_CompressBlocksBC4S_R16S( const ISPCTC_Surface_R16S* InputSurface, uint8_t* RawOutput );
-	//void ISPCTC_CompressBlocksBC4S_R32F( const ISPCTC_Surface_R32F* InputSurface, uint8_t* RawOutput );
+	void ISPCTC_BC4_Compress_R8( const ISPCTC_Surface_R8* InputSurface, uint8_t* OutputBlocks );
+	//void ISPCTC_BC4_Compress_R16( const ISPCTC_Surface_R16* InputSurface, uint8_t* OutputBlocks );
+	//void ISPCTC_BC4_Compress_R32F( const ISPCTC_Surface_R32F* InputSurface, uint8_t* OutputBlocks );
+	//void ISPCTC_BC4_CompressSigned_R8S( const ISPCTC_Surface_R8S* InputSurface, uint8_t* OutputBlocks );
+	//void ISPCTC_BC4_CompressSigned_R16S( const ISPCTC_Surface_R16S* InputSurface, uint8_t* OutputBlocks );
+	//void ISPCTC_BC4_CompressSigned_R32F( const ISPCTC_Surface_R32F* InputSurface, uint8_t* OutputBlocks );
 
 	// BC5.
-	void ISPCTC_CompressBlocksBC5_RG8( const ISPCTC_Surface_RG8* InputSurface, uint8_t* RawOutput );
-	//void ISPCTC_CompressBlocksBC5_R16( const ISPCTC_Surface_RG16* InputSurface, uint8_t* RawOutput );
-	//void ISPCTC_CompressBlocksBC5_R32F( const ISPCTC_Surface_RG32F* InputSurface, uint8_t* RawOutput );
-	//void ISPCTC_CompressBlocksBC5S_R8S( const ISPCTC_Surface_RG8S* InputSurface, uint8_t* RawOutput );
-	//void ISPCTC_CompressBlocksBC5S_R16S( const ISPCTC_Surface_RG16S* InputSurface, uint8_t* RawOutput );
-	//void ISPCTC_CompressBlocksBC5S_R32F( const ISPCTC_Surface_RG32F* InputSurface, uint8_t* RawOutput );
+	void ISPCTC_BC5_Compress_RG8( const ISPCTC_Surface_RG8* InputSurface, uint8_t* OutputBlocks );
+	//void ISPCTC_BC5_Compress_R16( const ISPCTC_Surface_RG16* InputSurface, uint8_t* OutputBlocks );
+	//void ISPCTC_BC5_Compress_R32F( const ISPCTC_Surface_RG32F* InputSurface, uint8_t* OutputBlocks );
+	//void ISPCTC_BC5_CompressSigned_R8S( const ISPCTC_Surface_RG8S* InputSurface, uint8_t* OutputBlocks );
+	//void ISPCTC_BC5_CompressSigned_R16S( const ISPCTC_Surface_RG16S* InputSurface, uint8_t* OutputBlocks );
+	//void ISPCTC_BC5_CompressSigned_R32F( const ISPCTC_Surface_RG32F* InputSurface, uint8_t* OutputBlocks );
 
 	// BC6H.
-	void ISPCTC_CompressBlocksBC6H_RGBA16F(const ISPCTC_Surface_RGBA16F* InputSurface, uint8_t* RawOutput, bc6h_enc_settings* EncSettings );
-	//void ISPCTC_CompressBlocksBC6H_RGBA32F(const ISPCTC_Surface_RGBA32F* InputSurface, uint8_t* RawOutput, bc6h_enc_settings* EncSettings );
-	//void ISPCTC_CompressBlocksBC6HS_RGBA16F(const ISPCTC_Surface_RGBA16F* InputSurface, uint8_t* RawOutput, bc6h_enc_settings* EncSettings );
-	//void ISPCTC_CompressBlocksBC6HS_RGBA32F(const ISPCTC_Surface_RGBA32F* InputSurface, uint8_t* RawOutput, bc6h_enc_settings* EncSettings );
+	void ISPCTC_BC6H_Compress_RGBA16F( const ISPCTC_Surface_RGBA16F* InputSurface, uint8_t* OutputBlocks, bc6h_enc_settings* EncSettings );
+	//void ISPCTC_BC6H_Compress_RGBA32F( const ISPCTC_Surface_RGBA32F* InputSurface, uint8_t* OutputBlocks, bc6h_enc_settings* EncSettings );
+	//void ISPCTC_BC6H_CompressSigned_RGBA16F( const ISPCTC_Surface_RGBA16F* InputSurface, uint8_t* OutputBlocks, bc6h_enc_settings* EncSettings );
+	//void ISPCTC_BC6H_CompressSigned_RGBA32F( const ISPCTC_Surface_RGBA32F* InputSurface, uint8_t* OutputBlocks, bc6h_enc_settings* EncSettings );
 
 	// BC7.
-	void ISPCTC_CompressBlocksBC7_RGBA8( const ISPCTC_Surface_RGBA8* InputSurface, uint8_t* RawOutput, bc7_enc_settings* EncSettings );
-	//void ISPCTC_CompressBlocksBC1_RGBA16( const ISPCTC_Surface_RGBA16* InputSurface, uint8_t* RawOutput, bc7_enc_settings* EncSettings );
-	//void ISPCTC_CompressBlocksBC1_RGBA32F( const ISPCTC_Surface_RGBA32F* InputSurface, uint8_t* RawOutput, bc7_enc_settings* EncSettings );
+	void ISPCTC_BC7_Compress_RGBA8( const ISPCTC_Surface_RGBA8* InputSurface, uint8_t* OutputBlocks, bc7_enc_settings* EncSettings );
+	//void ISPCTC_BC7_Compress_RGBA16( const ISPCTC_Surface_RGBA16* InputSurface, uint8_t* OutputBlocks, bc7_enc_settings* EncSettings );
+	//void ISPCTC_BC7_Compress_RGBA32F( const ISPCTC_Surface_RGBA32F* InputSurface, uint8_t* OutputBlocks, bc7_enc_settings* EncSettings );
 
 	// ETC1.
-	void ISPCTC_CompressBlocksETC1_RGBA8( const ISPCTC_Surface_RGBA8* InputSurface, uint8_t* RawOutput, etc_enc_settings* EncSettings );
-	//void ISPCTC_CompressBlocksBC1_RGBA16( const ISPCTC_Surface_RGBA16* InputSurface, uint8_t* RawOutput, etc_enc_settings* EncSettings );
-	//void ISPCTC_CompressBlocksBC1_RGBA32F( const ISPCTC_Surface_RGBA32F* InputSurface, uint8_t* RawOutput, etc_enc_settings* EncSettings );
+	void ISPCTC_ETC1_Compress_RGBA8( const ISPCTC_Surface_RGBA8* InputSurface, uint8_t* OutputBlocks, etc_enc_settings* EncSettings );
+	//void ISPCTC_ETC1_Compress_RGBA16( const ISPCTC_Surface_RGBA16* InputSurface, uint8_t* OutputBlocks, etc_enc_settings* EncSettings );
+	//void ISPCTC_ETC1_Compress_RGBA32F( const ISPCTC_Surface_RGBA32F* InputSurface, uint8_t* OutputBlocks, etc_enc_settings* EncSettings );
 
 	// ASTC.
-	void ISPCTC_CompressBlocksASTC_LDR_RGBA8( const ISPCTC_Surface_RGBA8* InputSurface, uint8_t* RawOutput, astc_enc_settings* EncSettings );
-	//void ISPCTC_CompressBlocksASTC_LDR_RGBA16( const ISPCTC_Surface_RGBA16* InputSurface, uint8_t* RawOutput, astc_enc_settings* EncSettings );
-	//void ISPCTC_CompressBlocksASTC_LDR_RGBA32F( const ISPCTC_Surface_RGBA32F* InputSurface, uint8_t* RawOutput, astc_enc_settings* EncSettings );
+	void ISPCTC_ASTC_CompressLDR_RGBA8( const ISPCTC_Surface_RGBA8* InputSurface, uint8_t* OutputBlocks, astc_enc_settings* EncSettings );
+	//void ISPCTC_ASTC_CompressLDR_RGBA16( const ISPCTC_Surface_RGBA16* InputSurface, uint8_t* OutputBlocks, astc_enc_settings* EncSettings );
+	//void ISPCTC_ASTC_CompressLDR_RGBA32F( const ISPCTC_Surface_RGBA32F* InputSurface, uint8_t* OutputBlocks, astc_enc_settings* EncSettings );
+}
+
+// Decompression API.
+extern "C"
+{
+	// BC1.
+	//void ISPCTC_BC1_Decompress_RGBA8( const uint8_t* InputBlocks, const ISPCTC_Surface_RGBA8* OutputSurface );
+	//void ISPCTC_BC1_Decompress_RGBA16( const uint8_t* InputBlocks, const ISPCTC_Surface_RGBA16* OutputSurface );
+	//void ISPCTC_BC1_Decompress_RGBA32F( const uint8_t* InputBlocks, const ISPCTC_Surface_RGBA32F* OutputSurface );
+
+	// BC2.
+	//void ISPCTC_BC2_Decompress_RGBA8( const uint8_t* InputBlocks, const ISPCTC_Surface_RGBA8* OutputSurface );
+	//void ISPCTC_BC2_Decompress_RGBA16( const uint8_t* InputBlocks, const ISPCTC_Surface_RGBA16* OutputSurface );
+	//void ISPCTC_BC2_Decompress_RGBA32F( const uint8_t* InputBlocks, const ISPCTC_Surface_RGBA32F* OutputSurface );
+
+	// BC3.
+	//void ISPCTC_BC3_Decompress_RGBA8( const uint8_t* InputBlocks, const ISPCTC_Surface_RGBA8* OutputSurface );
+	//void ISPCTC_BC3_Decompress_RGBA16( const uint8_t* InputBlocks, const ISPCTC_Surface_RGBA16* OutputSurface );
+	//void ISPCTC_BC3_Decompress_RGBA32F( const uint8_t* InputBlocks, const ISPCTC_Surface_RGBA32F* OutputSurface );
+
+	// BC4.
+	//void ISPCTC_BC4_Decompress_R8( const uint8_t* InputBlocks, const ISPCTC_Surface_R8* OutputSurface );
+	//void ISPCTC_BC4_Decompress_R16( const uint8_t* InputBlocks, const ISPCTC_Surface_R16* OutputSurface );
+	//void ISPCTC_BC4_Decompress_R32F( const uint8_t* InputBlocks, const ISPCTC_Surface_R32F* OutputSurface );
+	//void ISPCTC_BC4_CompressSigned_R8S( const uint8_t* InputBlocks, const ISPCTC_Surface_R8S* OutputSurface );
+	//void ISPCTC_BC4_CompressSigned_R16S( const uint8_t* InputBlocks, const ISPCTC_Surface_R16S* OutputSurface );
+	//void ISPCTC_BC4_CompressSigned_R32F( const uint8_t* InputBlocks, const ISPCTC_Surface_R32F* OutputSurface );
+
+	// BC5.
+	//void ISPCTC_BC5_Decompress_RG8( const uint8_t* InputBlocks, const ISPCTC_Surface_RG8* OutputSurface );
+	//void ISPCTC_BC5_Decompress_R16( const uint8_t* InputBlocks, const ISPCTC_Surface_RG16* OutputSurface );
+	//void ISPCTC_BC5_Decompress_R32F( const uint8_t* InputBlocks, const ISPCTC_Surface_RG32F* OutputSurface );
+	//void ISPCTC_BC5_CompressSigned_R8S( const uint8_t* InputBlocks, const ISPCTC_Surface_RG8S* OutputSurface );
+	//void ISPCTC_BC5_CompressSigned_R16S( const uint8_t* InputBlocks, const ISPCTC_Surface_RG16S* OutputSurface );
+	//void ISPCTC_BC5_CompressSigned_R32F( const uint8_t* InputBlocks, const ISPCTC_Surface_RG32F* OutputSurface );
+
+	// BC6H.
+	//void ISPCTC_BC6H_Decompress_RGBA16F( const uint8_t* InputBlocks, const ISPCTC_Surface_RGBA16F* OutputSurface );
+	//void ISPCTC_BC6H_Decompress_RGBA32F( const uint8_t* InputBlocks, const ISPCTC_Surface_RGBA32F* OutputSurface );
+	//void ISPCTC_BC6H_CompressSigned_RGBA16F( const uint8_t* InputBlocks, const ISPCTC_Surface_RGBA16F* OutputSurface );
+	//void ISPCTC_BC6H_CompressSigned_RGBA32F( const uint8_t* InputBlocks, const ISPCTC_Surface_RGBA32F* OutputSurface );
+
+	// BC7.
+	//void ISPCTC_BC7_Decompress_RGBA8( const uint8_t* InputBlocks, const ISPCTC_Surface_RGBA8* OutputSurface );
+	//void ISPCTC_BC7_Decompress_RGBA16( const uint8_t* InputBlocks, const ISPCTC_Surface_RGBA16* OutputSurface );
+	//void ISPCTC_BC7_Decompress_RGBA32F( const uint8_t* InputBlocks, const ISPCTC_Surface_RGBA32F* OutputSurface );
+
+	// ETC1.
+	//void ISPCTC_ETC1_Decompress_RGBA8( const uint8_t* InputBlocks, const ISPCTC_Surface_RGBA8* OutputSurface );
+	//void ISPCTC_ETC1_Decompress_RGBA16( const uint8_t* InputBlocks, const ISPCTC_Surface_RGBA16* OutputSurface );
+	//void ISPCTC_ETC1_Decompress_RGBA32F( const uint8_t* InputBlocks, const ISPCTC_Surface_RGBA32F* OutputSurface );
+
+	// ASTC.
+	//void ISPCTC_ASTC_CompressLDR_RGBA8( const uint8_t* InputBlocks, const ISPCTC_Surface_RGBA8* OutputSurface );
+	//void ISPCTC_ASTC_CompressLDR_RGBA16( const uint8_t* InputBlocks, const ISPCTC_Surface_RGBA16* OutputSurface );
+	//void ISPCTC_ASTC_CompressLDR_RGBA32F( const uint8_t* InputBlocks, const ISPCTC_Surface_RGBA32F* OutputSurface );
 }
