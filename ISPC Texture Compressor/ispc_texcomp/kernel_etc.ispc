@@ -568,23 +568,58 @@ void etc_enc_copy_settings(etc_enc_state state[], uniform etc_enc_settings setti
 	state->fastSkipTreshold = settings->fastSkipTreshold;
 }
 
-inline void CompressBlockETC1(uniform rgba_surface src[], int xx, uniform int yy, uniform uint8 dst[], uniform etc_enc_settings settings[])
+///////////////////////////////////////////////////////////
+// High level per block handling.
+//
+
+inline void CompressBlockETC1( etc_enc_state EncState[], uniform etc_enc_settings EncSettings[] )
 {
-	etc_enc_state _state;
-	varying etc_enc_state* uniform state = &_state;
+	etc_enc_copy_settings( EncState, EncSettings );
+	EncState->best_err = 1e99;
 
-	etc_enc_copy_settings(state, settings);
-	load_4x4_block_interleaved(state->block, src, xx, yy);
-	state->best_err = 1e99;
-
-	CompressBlockETC1_core(state);
-
-	store_data(dst, src->width, xx, yy, state->best_data, 2);
+	CompressBlockETC1_core( EncState );
 }
 
-export void CompressBlocksETC1_ispc(uniform rgba_surface src[], uniform uint8 dst[], uniform etc_enc_settings settings[])
+///////////////////////////////////////////////////////////
+// Dispatcher from input surface to block level.
+//
+// Templates would be nice here, but not in ispc, maybe preprocessor macros?
+// Are there function pointers available in ispc?
+// 
+
+// ETC1.
+inline void LoadCompressStoreBlockETC1_RGBA8( uniform Surface_RGBA8 InputSurface[], int HorizontalBlockIndex, uniform int VerticalBlockIndex, uniform uint8 OutputBlocks[], uniform etc_enc_settings EncSettings[] )
 {
-	for (uniform int yy = 0; yy<src->height / 4; yy++)
-		foreach(xx = 0 ... src->width / 4)
-			CompressBlockETC1(src, xx, yy, dst, settings);
+	etc_enc_state EncState;
+
+	LoadUncompressed4x4BlockInterleavedNoAlpha_RGBA8( EncState.block, InputSurface, HorizontalBlockIndex, VerticalBlockIndex );
+	CompressBlockETC1( &EncState, EncSettings );
+	StoreCompressedBlock( OutputBlocks, InputSurface->Width, HorizontalBlockIndex, VerticalBlockIndex, EncState.best_data, 2 );
+}
+inline void LoadCompressStoreBlockETC1_RGBA16( uniform Surface_RGBA16 InputSurface[], int HorizontalBlockIndex, uniform int VerticalBlockIndex, uniform uint8 OutputBlocks[], uniform etc_enc_settings EncSettings[] )
+{
+	etc_enc_state EncState;
+
+	LoadUncompressed4x4BlockInterleavedNoAlpha_RGBA16( EncState.block, InputSurface, HorizontalBlockIndex, VerticalBlockIndex );
+	CompressBlockETC1( &EncState, EncSettings );
+	StoreCompressedBlock( OutputBlocks, InputSurface->Width, HorizontalBlockIndex, VerticalBlockIndex, EncState.best_data, 2 );
+}
+
+export void ETC1_Compress_RGBA8( uniform Surface_RGBA8 InputSurface[], uniform uint8 OutputBlocks[], uniform etc_enc_settings EncSettings[] )
+{	
+	uniform int NumHorizontalBlocks = InputSurface->Width/4;
+	uniform int NumVerticalBlocks   = InputSurface->Height/4;
+
+	for ( uniform int VerticalBlockIndex=0; VerticalBlockIndex<NumVerticalBlocks; VerticalBlockIndex++ )
+		foreach ( HorizontalBlockIndex=0...NumHorizontalBlocks )
+			LoadCompressStoreBlockETC1_RGBA8( InputSurface, HorizontalBlockIndex, VerticalBlockIndex, OutputBlocks, EncSettings );
+}
+export void ETC1_Compress_RGBA16( uniform Surface_RGBA16 InputSurface[], uniform uint8 OutputBlocks[], uniform etc_enc_settings EncSettings[] )
+{	
+	uniform int NumHorizontalBlocks = InputSurface->Width/4;
+	uniform int NumVerticalBlocks   = InputSurface->Height/4;
+
+	for ( uniform int VerticalBlockIndex=0; VerticalBlockIndex<NumVerticalBlocks; VerticalBlockIndex++ )
+		foreach ( HorizontalBlockIndex=0...NumHorizontalBlocks )
+			LoadCompressStoreBlockETC1_RGBA16( InputSurface, HorizontalBlockIndex, VerticalBlockIndex, OutputBlocks, EncSettings );
 }

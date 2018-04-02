@@ -27,7 +27,8 @@
 // Typedefs.
 //
 
-typedef unsigned int8 uint8;
+typedef unsigned int8  uint8;
+typedef unsigned int16 uint16;
 typedef unsigned int32 uint32;
 typedef unsigned int64 uint64;
 
@@ -364,102 +365,137 @@ struct red_surface
 	int width, height, stride;
 };
 
+// Surface definitions.
+#define DELARE_SURFACE(name) \
+	struct name \
+	{ \
+		uint8* Ptr; \
+		int32 Width; \
+		int32 Height; \
+		int32 Stride; \
+	};
+
+// 8 bit unsigned int/component
+DELARE_SURFACE(Surface_R8)
+DELARE_SURFACE(Surface_RG8)
+DELARE_SURFACE(Surface_RGBA8)
+
+// 8 bit signed int/component
+DELARE_SURFACE(Surface_R8S)
+DELARE_SURFACE(Surface_RG8S)
+
+// 16 bit unsigned int/component
+DELARE_SURFACE(Surface_R16)
+DELARE_SURFACE(Surface_RG16)
+DELARE_SURFACE(Surface_RGBA16)
+
+// 16 bit signed int/component
+DELARE_SURFACE(Surface_R16S)
+DELARE_SURFACE(Surface_RG16S)
+
+// 16 bit float/component (uint16_t in lack of buildin type).
+DELARE_SURFACE(Surface_R16F)
+DELARE_SURFACE(Surface_RG16F)
+DELARE_SURFACE(Surface_RGBA16F)
+
+// 32 bit float/component
+DELARE_SURFACE(Surface_R32F)
+DELARE_SURFACE(Surface_RG32F)
+DELARE_SURFACE(Surface_RGBA32F)
 
 ///////////////////////////////////////////////////////////
 // Load data from input surface structures.
 //
 
-inline void load_4x4_block_interleaved(float block[48], uniform rgba_surface* uniform src, int xx, uniform int yy)
+inline void LoadUncompressed4x4Block_R8( float Block[16], uniform Surface_R8* uniform InputSurface, int HorizontalBlockIndex, uniform int VerticalBlockIndex )
 {
-	for (uniform int y = 0; y<4; y++)
-	{
-		for (uniform int x = 0; x<4; x++)
-		{
-			uniform unsigned int32* uniform src_ptr = (unsigned int32*)&src->ptr[(yy * 4 + y)*src->stride];
-			unsigned int32 rgba = gather_uint(src_ptr, xx * 4 + x);
+	const uniform int BlockHeight = 4;
+	const uniform int BlockWidth  = 4;
 
-			block[16 * 0 + y * 4 + x] = (int)((rgba >> 0) & 255);
-			block[16 * 1 + y * 4 + x] = (int)((rgba >> 8) & 255);
-			block[16 * 2 + y * 4 + x] = (int)((rgba >> 16) & 255);
+	for ( uniform int Row=0; Row<BlockWidth; Row++ )
+	{
+		uniform uint32* uniform SurfaceRowStartPtr = (uint32*)&InputSurface->Ptr[(VerticalBlockIndex*BlockHeight+Row)*InputSurface->Stride];
+		uint32 RRRR = gather_uint( SurfaceRowStartPtr, HorizontalBlockIndex ); // *(BlockWidth/sizeof(uint32)) breaks things for reasons I can't figure out.
+
+		Block[Row*BlockWidth+0] = (int)((RRRR>> 0)&0xFF);
+		Block[Row*BlockWidth+1] = (int)((RRRR>> 8)&0xFF);
+		Block[Row*BlockWidth+2] = (int)((RRRR>>16)&0xFF);
+		Block[Row*BlockWidth+3] = (int)((RRRR>>24)&0xFF);
+	}
+}
+
+inline void LoadUncompressed4x4BlockInterleaved_RG8( float InterleavedBlock[32], uniform Surface_RG8* uniform InputSurface, int HorizontalBlockIndex, uniform int VerticalBlockIndex )
+{
+	const uniform int BlockHeight = 4;
+	const uniform int BlockWidth  = 4;
+
+	for ( uniform int Row=0; Row<BlockWidth; Row++ )
+	{
+		uniform uint32* uniform SurfaceRowStartPtr = (uint32*)&InputSurface->Ptr[(VerticalBlockIndex*BlockHeight+Row)*InputSurface->Stride];
+
+		uint32 RG0RG1 = gather_uint( SurfaceRowStartPtr, HorizontalBlockIndex*2+0 );
+		uint32 RG2RG3 = gather_uint( SurfaceRowStartPtr, HorizontalBlockIndex*2+1 );
+
+		InterleavedBlock[16*0+Row*BlockWidth+0] = (int)((RG0RG1>> 0)&0xFF);
+		InterleavedBlock[16*1+Row*BlockWidth+0] = (int)((RG0RG1>> 8)&0xFF);
+		InterleavedBlock[16*0+Row*BlockWidth+1] = (int)((RG0RG1>>16)&0xFF);
+		InterleavedBlock[16*1+Row*BlockWidth+1] = (int)((RG0RG1>>24)&0xFF);
+		InterleavedBlock[16*0+Row*BlockWidth+2] = (int)((RG2RG3>> 0)&0xFF);
+		InterleavedBlock[16*1+Row*BlockWidth+2] = (int)((RG2RG3>> 8)&0xFF);
+		InterleavedBlock[16*0+Row*BlockWidth+3] = (int)((RG2RG3>>16)&0xFF);
+		InterleavedBlock[16*1+Row*BlockWidth+3] = (int)((RG2RG3>>24)&0xFF);
+	}
+}
+
+inline void LoadUncompressed4x4BlockInterleaved_RGBA8( float InterleavedBlock[64], uniform Surface_RGBA8* uniform InputSurface, int HorizontalBlockIndex, uniform int VerticalBlockIndex )
+{
+	const uniform int BlockHeight = 4;
+	const uniform int BlockWidth  = 4;
+
+	for ( uniform int Row=0; Row<BlockHeight; Row++ )
+	{
+		for ( uniform int Col=0; Col<BlockWidth; Col++ )
+		{
+			uniform uint32* uniform SurfaceRowStartPtr = (uint32*)&InputSurface->Ptr[(VerticalBlockIndex*BlockHeight+Row)*InputSurface->Stride];
+
+			uint32 RGBA = gather_uint( SurfaceRowStartPtr, HorizontalBlockIndex*BlockWidth+Col );
+
+			InterleavedBlock[16*0+Row*BlockWidth+Col] = (int)((RGBA>> 0)&0xFF);
+			InterleavedBlock[16*1+Row*BlockWidth+Col] = (int)((RGBA>> 8)&0xFF);
+			InterleavedBlock[16*2+Row*BlockWidth+Col] = (int)((RGBA>>16)&0xFF);
+			InterleavedBlock[16*3+Row*BlockWidth+Col] = (int)((RGBA>>24)&0xFF);
 		}
 	}
 }
 
-inline void load_4x4_block_interleaved_rgba(float block[64], uniform rgba_surface* uniform src, int xx, uniform int yy)
+inline void LoadUncompressed4x4BlockInterleavedNoAlpha_RGBA8( float InterleavedBlock[48], uniform Surface_RGBA8* uniform InputSurface, int HorizontalBlockIndex, uniform int VerticalBlockIndex )
 {
-	for (uniform int y=0; y<4; y++)
-	{
-		for (uniform int x=0; x<4; x++)
-		{
-			uniform unsigned int32* uniform src_ptr = (unsigned int32*)&src->ptr[(yy*4+y)*src->stride];
-			unsigned int32 rgba = gather_uint(src_ptr, xx*4+x);
+	const uniform int BlockHeight = 4;
+	const uniform int BlockWidth  = 4;
 
-			block[16*0+y*4+x] = (int)((rgba>> 0)&255);
-			block[16*1+y*4+x] = (int)((rgba>> 8)&255);
-			block[16*2+y*4+x] = (int)((rgba>>16)&255);
-			block[16*3+y*4+x] = (int)((rgba>>24)&255);
+	for ( uniform int Row=0; Row<BlockHeight; Row++ )
+	{
+		for ( uniform int Col=0; Col<BlockWidth; Col++ )
+		{
+			uniform uint32* uniform SurfaceRowStartPtr = (uint32*)&InputSurface->Ptr[(VerticalBlockIndex*BlockHeight+Row)*InputSurface->Stride];
+
+			uint32 RGBX = gather_uint( SurfaceRowStartPtr, HorizontalBlockIndex*BlockWidth+Col );
+
+			InterleavedBlock[16*0+Row*BlockWidth+Col] = (int)((RGBX>> 0)&0xFF);
+			InterleavedBlock[16*1+Row*BlockWidth+Col] = (int)((RGBX>> 8)&0xFF);
+			InterleavedBlock[16*2+Row*BlockWidth+Col] = (int)((RGBX>>16)&0xFF);
 		}
 	}
 }
 
-inline void load_4x4_block_interleaved_rg(float block[32], uniform rg_surface* uniform src, int xx, uniform int yy)
+inline void LoadUncompressedVariableBlockInterleaved_RGBA8( float pixels[], uniform rgba_surface InputSurface[], int HorizontalBlockIndex, int VerticalBlockIndex, uniform int BlockWidth, uniform int BlockHeight )
 {
-	for (uniform int y=0; y<4; y++)
+	uniform int pitch = BlockWidth * BlockHeight;
+	for (uniform int y = 0; y < BlockHeight; y++)
 	{
-		for (uniform int x=0; x<4; x++)
+		for (uniform int x = 0; x < BlockWidth; x++)
 		{
-			uniform unsigned int16* uniform src_ptr = (unsigned int16*)&src->ptr[(yy*4+y)*src->stride];
-			unsigned int16 rg = gather_uint16(src_ptr, xx*4+x);
-
-			block[16*0+y*4+x] = (int)((rg>>0)&255);
-			block[16*1+y*4+x] = (int)((rg>>8)&255);
-		}
-	}
-}
-
-inline void load_4x4_block_red(float block[16], uniform red_surface* uniform src, int xx, uniform int yy)
-{
-	for (uniform int y=0; y<4; y++)
-	{
-		for (uniform int x=0; x<4; x++)
-		{
-			uniform unsigned int8* uniform src_ptr = (unsigned int8*)&src->ptr[(yy*4+y)*src->stride];
-			unsigned int8 red = gather_uint8(src_ptr, xx*4+x);
-
-			block[y*4+x] = (int)red;
-		}
-	}
-}
-
-inline void load_4x4_block_interleaved_16bit(float block[48], uniform rgba_surface* uniform src, int xx, uniform int yy)
-{
-	for (uniform int y = 0; y<4; y++)
-	{
-		for (uniform int x = 0; x<4; x++)
-		{
-			uniform unsigned int32* uniform src_ptr_r = (unsigned int32*)&src->ptr[(yy * 4 + y)*src->stride + 0];
-			uniform unsigned int32* uniform src_ptr_g = (unsigned int32*)&src->ptr[(yy * 4 + y)*src->stride + 2];
-			uniform unsigned int32* uniform src_ptr_b = (unsigned int32*)&src->ptr[(yy * 4 + y)*src->stride + 4];
-			unsigned int32 xr = gather_uint(src_ptr_r, (xx * 4 + x) * 2);
-			unsigned int32 xg = gather_uint(src_ptr_g, (xx * 4 + x) * 2);
-			unsigned int32 xb = gather_uint(src_ptr_b, (xx * 4 + x) * 2);
-
-			block[16 * 0 + y * 4 + x] = (int)(xr & 0xFFFF);
-			block[16 * 1 + y * 4 + x] = (int)(xg & 0xFFFF);
-			block[16 * 2 + y * 4 + x] = (int)(xb & 0xFFFF);
-			block[16 * 3 + y * 4 + x] = 0;
-		}
-	}
-}
-
-inline void load_variable_block_interleaved(float pixels[], uniform rgba_surface src[], int xx, int yy, uniform int width, uniform int height)
-{
-	uniform int pitch = width * height;
-	for (uniform int y = 0; y < height; y++)
-	{
-		for (uniform int x = 0; x < width; x++)
-		{
-			uint32 rgba = gather_uint((uint32*)src->ptr, ((yy * height + y)*src->stride + (xx * width + x) * 4)/4);
+			uint32 rgba = gather_uint((uint32*)InputSurface->ptr, ((VerticalBlockIndex * BlockHeight + y)*InputSurface->stride + (HorizontalBlockIndex * BlockWidth + x) * 4)/4);
 
 			set_pixel(pixels, 0, x, y, (int)((rgba >> 0) & 255));
 			set_pixel(pixels, 1, x, y, (int)((rgba >> 8) & 255));
@@ -469,15 +505,118 @@ inline void load_variable_block_interleaved(float pixels[], uniform rgba_surface
 	}
 }
 
+inline void LoadUncompressed4x4Block_R16( float Block[16], uniform Surface_R16* uniform InputSurface, int HorizontalBlockIndex, uniform int VerticalBlockIndex )
+{
+	const uniform int BlockHeight = 4;
+	const uniform int BlockWidth  = 4;
+
+	for ( uniform int Row=0; Row<BlockWidth; Row++ )
+	{
+		uniform uint32* uniform SurfaceRowStartPtr = (uint32*)&InputSurface->Ptr[(VerticalBlockIndex*BlockHeight+Row)*InputSurface->Stride];
+
+		uint32 R0R1 = gather_uint( SurfaceRowStartPtr, HorizontalBlockIndex*2+0 );
+		uint32 R2R3 = gather_uint( SurfaceRowStartPtr, HorizontalBlockIndex*2+1 );
+
+		Block[Row*BlockWidth+0] = ((int)((R0R1>> 0)&0xFFFFu))*(255f/65535f);
+		Block[Row*BlockWidth+1] = ((int)((R0R1>>16)&0xFFFFu))*(255f/65535f);
+		Block[Row*BlockWidth+2] = ((int)((R2R3>> 0)&0xFFFFu))*(255f/65535f);
+		Block[Row*BlockWidth+3] = ((int)((R2R3>>16)&0xFFFFu))*(255f/65535f);
+	}
+}
+
+inline void LoadUncompressed4x4BlockInterleaved_RG16( float InterleavedBlock[32], uniform Surface_RG16* uniform InputSurface, int HorizontalBlockIndex, uniform int VerticalBlockIndex )
+{
+	const uniform int BlockHeight = 4;
+	const uniform int BlockWidth  = 4;
+
+	for ( uniform int Row=0; Row<BlockHeight; Row++ )
+	{
+		for ( uniform int Col=0; Col<BlockWidth; Col++ )
+		{
+			uniform uint32* uniform SurfaceRowStartPtr = (uint32*)&InputSurface->Ptr[(VerticalBlockIndex*BlockHeight+Row)*InputSurface->Stride];
+
+			uint32 RG = gather_uint( SurfaceRowStartPtr, HorizontalBlockIndex*BlockWidth+Col );
+
+			InterleavedBlock[16*0+Row*BlockWidth+Col] = ((int)((RG>> 0)&0xFFFFu))*(255f/65535f);
+			InterleavedBlock[16*1+Row*BlockWidth+Col] = ((int)((RG>>16)&0xFFFFu))*(255f/65535f);
+		}
+	}
+}
+
+inline void LoadUncompressed4x4BlockInterleaved_RGBA16( float InterleavedBlock[64], uniform Surface_RGBA16* uniform InputSurface, int HorizontalBlockIndex, uniform int VerticalBlockIndex )
+{
+	const uniform int BlockHeight = 4;
+	const uniform int BlockWidth  = 4;
+
+	for ( uniform int Row=0; Row<BlockHeight; Row++ )
+	{
+		for ( uniform int Col=0; Col<BlockWidth; Col++ )
+		{
+			uniform uint32* uniform SurfaceRowStartPtr = (uint32*)&InputSurface->Ptr[(VerticalBlockIndex*BlockHeight+Row)*InputSurface->Stride];
+
+			uint32 RG = gather_uint( SurfaceRowStartPtr, (HorizontalBlockIndex*BlockWidth+Col)*2+0 );
+			uint32 BA = gather_uint( SurfaceRowStartPtr, (HorizontalBlockIndex*BlockWidth+Col)*2+1 );
+
+			InterleavedBlock[16*0+Row*BlockWidth+Col] = ((int)((RG>> 0)&0xFFFFu))*(255f/65535f);
+			InterleavedBlock[16*1+Row*BlockWidth+Col] = ((int)((RG>>16)&0xFFFFu))*(255f/65535f);
+			InterleavedBlock[16*2+Row*BlockWidth+Col] = ((int)((BA>> 0)&0xFFFFu))*(255f/65535f);
+			InterleavedBlock[16*3+Row*BlockWidth+Col] = ((int)((BA>>16)&0xFFFFu))*(255f/65535f);
+		}
+	}
+}
+
+inline void LoadUncompressed4x4BlockInterleavedNoAlpha_RGBA16( float InterleavedBlock[48], uniform Surface_RGBA16* uniform InputSurface, int HorizontalBlockIndex, uniform int VerticalBlockIndex )
+{
+	const uniform int BlockHeight = 4;
+	const uniform int BlockWidth  = 4;
+
+	for ( uniform int Row=0; Row<BlockHeight; Row++ )
+	{
+		for ( uniform int Col=0; Col<BlockWidth; Col++ )
+		{
+			uniform uint32* uniform SurfaceRowStartPtr = (uint32*)&InputSurface->Ptr[(VerticalBlockIndex*BlockHeight+Row)*InputSurface->Stride];
+
+			uint32 RG = gather_uint( SurfaceRowStartPtr, (HorizontalBlockIndex*BlockWidth+Col)*2+0 );
+			uint32 BX = gather_uint( SurfaceRowStartPtr, (HorizontalBlockIndex*BlockWidth+Col)*2+1 );
+
+			InterleavedBlock[16*0+Row*BlockWidth+Col] = ((int)((RG>> 0)&0xFFFFu))*(255f/65535f);
+			InterleavedBlock[16*1+Row*BlockWidth+Col] = ((int)((RG>>16)&0xFFFFu))*(255f/65535f);
+			InterleavedBlock[16*2+Row*BlockWidth+Col] = ((int)((BX>> 0)&0xFFFFu))*(255f/65535f);
+		}
+	}
+}
+
+inline void load_4x4_block_interleaved_16bit( float InterleavedBlock[48], uniform rgba_surface* uniform InputSurface, int HorizontalBlockIndex, uniform int VerticalBlockIndex )
+{
+	for (uniform int y = 0; y<4; y++)
+	{
+		for (uniform int x = 0; x<4; x++)
+		{
+			uniform uint32* uniform src_ptr_r = (uint32*)&InputSurface->ptr[(VerticalBlockIndex * 4 + y)*InputSurface->stride + 0];
+			uniform uint32* uniform src_ptr_g = (uint32*)&InputSurface->ptr[(VerticalBlockIndex * 4 + y)*InputSurface->stride + 2];
+			uniform uint32* uniform src_ptr_b = (uint32*)&InputSurface->ptr[(VerticalBlockIndex * 4 + y)*InputSurface->stride + 4];
+
+			uint32 xr = gather_uint(src_ptr_r, (HorizontalBlockIndex * 4 + x) * 2);
+			uint32 xg = gather_uint(src_ptr_g, (HorizontalBlockIndex * 4 + x) * 2); // 2 byte aligned load?
+			uint32 xb = gather_uint(src_ptr_b, (HorizontalBlockIndex * 4 + x) * 2);
+
+			InterleavedBlock[16 * 0 + y * 4 + x] = (int)(xr & 0xFFFF);
+			InterleavedBlock[16 * 1 + y * 4 + x] = (int)(xg & 0xFFFF);
+			InterleavedBlock[16 * 2 + y * 4 + x] = (int)(xb & 0xFFFF);
+			InterleavedBlock[16 * 3 + y * 4 + x] = 0;
+		}
+	}
+}
+
 ///////////////////////////////////////////////////////////
 // Store data.
 //
 
-inline void store_data(uniform uint8 dst[], int width, int xx, uniform int yy, uint32 data[], int data_size)
+inline void StoreCompressedBlock( uniform uint8 OutputBase[], int TextureWidth, int HorizontalBlockIndex, uniform int VerticalBlockIndex, uint32 Data[], int NumDataDwords )
 {
-	for (uniform int k=0; k<data_size; k++)
+	for ( uniform int k=0; k<NumDataDwords; k++ )
 	{
-		uniform uint32* dst_ptr = (uint32*)&dst[(yy)*width*data_size];
-		scatter_uint(dst_ptr, xx*data_size+k, data[k]);
+		uniform uint32* OutputRow = (uint32*)&OutputBase[(VerticalBlockIndex)*TextureWidth*NumDataDwords];
+		scatter_uint( OutputRow, HorizontalBlockIndex*NumDataDwords+k, Data[k]);
 	}
 }

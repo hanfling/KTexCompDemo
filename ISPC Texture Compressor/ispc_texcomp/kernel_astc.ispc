@@ -1129,7 +1129,7 @@ export void astc_rank_ispc(uniform rgba_surface src[], uniform int xx, uniform i
 
 	assert(state->fastSkipTreshold <= 64);
 
-	load_variable_block_interleaved(state->pixels, src, xx + programIndex, yy, state->block_width, state->block_height);
+	LoadUncompressedVariableBlockInterleaved_RGBA8(state->pixels, src, xx + programIndex, yy, state->block_width, state->block_height);
 	if (settings->channels == 3)
 		clear_alpha(state->pixels, state->block_width, state->block_height);
 
@@ -2115,7 +2115,7 @@ export void astc_encode_ispc(uniform rgba_surface src[], uniform float block_sco
 	state->block_height = settings->block_height;
 	state->refineIterations = settings->refineIterations;
 
-	load_variable_block_interleaved(state->pixels, src, xx, yy, state->block_width, state->block_height);
+	LoadUncompressedVariableBlockInterleaved_RGBA8(state->pixels, src, xx, yy, state->block_width, state->block_height);
 
 	astc_block _block;
 	varying astc_block* uniform block = &_block;

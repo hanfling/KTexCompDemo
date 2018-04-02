@@ -1459,27 +1459,65 @@ void bc7_enc_copy_settings(bc7_enc_state state[], uniform bc7_enc_settings setti
 	state->refineIterations[6] = settings->refineIterations[6];
 }
 
-inline void CompressBlockBC7(uniform rgba_surface src[], int xx, uniform int yy, uniform uint8 dst[], uniform bc7_enc_settings settings[])
+///////////////////////////////////////////////////////////
+// High level per block handling.
+//
+
+inline void CompressBlockBC7( bc7_enc_state EncState[], uniform bc7_enc_settings EncSettings[] )
 {
-	bc7_enc_state _state;
-	varying bc7_enc_state* uniform state = &_state;
+	bc7_enc_copy_settings( EncState, EncSettings );
 
-	bc7_enc_copy_settings(state, settings);
-	load_4x4_block_interleaved_rgba(state->block, src, xx, yy);
-	state->best_err = 1e99;
-	state->opaque_err = compute_opaque_err(state->block, state->channels);
+	EncState->best_err   = 1e99;
+	EncState->opaque_err = compute_opaque_err( EncState->block, EncState->channels );
 
-	CompressBlockBC7_core(state);
-
-	store_data(dst, src->width, xx, yy, state->best_data, 4);
+	CompressBlockBC7_core( EncState );
 }
 
-export void CompressBlocksBC7_ispc(uniform rgba_surface src[], uniform uint8 dst[], uniform bc7_enc_settings settings[])
+
+///////////////////////////////////////////////////////////
+// Dispatcher from input surface to block level.
+//
+// Templates would be nice here, but not in ispc, maybe preprocessor macros?
+// Are there function pointers available in ispc?
+// 
+
+// BC7.
+inline void LoadCompressStoreBlockBC7_RGBA8( uniform Surface_RGBA8 InputSurface[], int HorizontalBlockIndex, uniform int VerticalBlockIndex, uniform uint8 OutputBlocks[], uniform bc7_enc_settings EncSettings[] )
 {
-	for (uniform int yy = 0; yy<src->height/4; yy++)
-		foreach (xx = 0 ... src->width/4)
-			CompressBlockBC7(src, xx, yy, dst, settings);
+	bc7_enc_state EncState;
+
+	LoadUncompressed4x4BlockInterleaved_RGBA8( EncState.block, InputSurface, HorizontalBlockIndex, VerticalBlockIndex );
+	CompressBlockBC7( &EncState, EncSettings );
+	StoreCompressedBlock( OutputBlocks, InputSurface->Width, HorizontalBlockIndex, VerticalBlockIndex, EncState.best_data, 4 );
 }
+inline void LoadCompressStoreBlockBC7_RGBA16( uniform Surface_RGBA16 InputSurface[], int HorizontalBlockIndex, uniform int VerticalBlockIndex, uniform uint8 OutputBlocks[], uniform bc7_enc_settings EncSettings[] )
+{
+	bc7_enc_state EncState;
+
+	LoadUncompressed4x4BlockInterleaved_RGBA16( EncState.block, InputSurface, HorizontalBlockIndex, VerticalBlockIndex );
+	CompressBlockBC7( &EncState, EncSettings );
+	StoreCompressedBlock( OutputBlocks, InputSurface->Width, HorizontalBlockIndex, VerticalBlockIndex, EncState.best_data, 4 );
+}
+
+export void BC7_Compress_RGBA8( uniform Surface_RGBA8 InputSurface[], uniform uint8 OutputBlocks[], uniform bc7_enc_settings EncSettings[] )
+{	
+	uniform int NumHorizontalBlocks = InputSurface->Width/4;
+	uniform int NumVerticalBlocks   = InputSurface->Height/4;
+
+	for ( uniform int VerticalBlockIndex=0; VerticalBlockIndex<NumVerticalBlocks; VerticalBlockIndex++ )
+		foreach ( HorizontalBlockIndex=0...NumHorizontalBlocks )
+			LoadCompressStoreBlockBC7_RGBA8( InputSurface, HorizontalBlockIndex, VerticalBlockIndex, OutputBlocks, EncSettings );
+}
+export void BC7_Compress_RGBA16( uniform Surface_RGBA16 InputSurface[], uniform uint8 OutputBlocks[], uniform bc7_enc_settings EncSettings[] )
+{	
+	uniform int NumHorizontalBlocks = InputSurface->Width/4;
+	uniform int NumVerticalBlocks   = InputSurface->Height/4;
+
+	for ( uniform int VerticalBlockIndex=0; VerticalBlockIndex<NumVerticalBlocks; VerticalBlockIndex++ )
+		foreach ( HorizontalBlockIndex=0...NumHorizontalBlocks )
+			LoadCompressStoreBlockBC7_RGBA16( InputSurface, HorizontalBlockIndex, VerticalBlockIndex, OutputBlocks, EncSettings );
+}
+
 
 ///////////////////////////////////////////////////////////
 //					 BC6H encoding
@@ -2612,7 +2650,7 @@ inline void CompressBlockBC6H(uniform rgba_surface src[], int xx, uniform int yy
 
 	CompressBlockBC6H_core(state);
 
-	store_data(dst, src->width, xx, yy, state->best_data, 4);
+	StoreCompressedBlock(dst, src->width, xx, yy, state->best_data, 4);
 }
 
 export void CompressBlocksBC6H_ispc(uniform rgba_surface src[], uniform uint8 dst[], uniform bc6h_enc_settings settings[])

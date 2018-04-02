@@ -450,114 +450,147 @@ void ReplicateBorders(rgba_surface* dst_slice, const rgba_surface* src_tex, int 
 	}
 }
 
-void CompressBlocksBC1(const rgba_surface* src, uint8_t* dst)
-{
-	ispc::CompressBlocksBC1_ispc((ispc::rgba_surface*)src, dst);
-}
-
-void CompressBlocksBC2(const rgba_surface* src, uint8_t* dst)
-{
-	ispc::CompressBlocksBC2_ispc((ispc::rgba_surface*)src, dst);
-}
-
-void CompressBlocksBC3(const rgba_surface* src, uint8_t* dst)
-{
-	ispc::CompressBlocksBC3_ispc((ispc::rgba_surface*)src, dst);
-}
-
-void CompressBlocksBC4(const red_surface* src, uint8_t* dst)
-{
-	ispc::CompressBlocksBC4_ispc((ispc::red_surface*)src, dst);
-}
-
-void CompressBlocksBC5(const rg_surface* src, uint8_t* dst)
-{
-	ispc::CompressBlocksBC5_ispc((ispc::rg_surface*)src, dst);
-}
-
-void CompressBlocksBC7(const rgba_surface* src, uint8_t* dst, bc7_enc_settings* settings)
-{
-	ispc::CompressBlocksBC7_ispc((ispc::rgba_surface*)src, dst, (ispc::bc7_enc_settings*)settings);
-}
-
-void CompressBlocksBC6H(const rgba_surface* src, uint8_t* dst, bc6h_enc_settings* settings)
-{
-	ispc::CompressBlocksBC6H_ispc((ispc::rgba_surface*)src, dst, (ispc::bc6h_enc_settings*)settings);
-}
-
-void CompressBlocksETC1(const rgba_surface* src, uint8_t* dst, etc_enc_settings* settings)
-{
-	ispc::CompressBlocksETC1_ispc((ispc::rgba_surface*)src, dst, (ispc::etc_enc_settings*)settings);
-}
-
-
 // BC1.
-void ISPCTC_BC1_Compress_RGBA8( const ISPCTC_Surface_RGBA8* InputSurface, uint8_t* RawOutput )
+void CompressBlocksBC1( const rgba_surface* InputSurface, uint8_t* OutputBlocks )
 {
-	ispc::CompressBlocksBC1_ispc((ispc::rgba_surface*)InputSurface, RawOutput );
+	ISPCTC_BC1_Compress_RGBA8( (const ISPCTC_Surface_RGBA8*)InputSurface, OutputBlocks );
 }
-//void ISPCTC_BC1_Compress_RGBA16( const ISPCTC_Surface_RGBA16* InputSurface, uint8_t* OutputBlocks );
+void ISPCTC_BC1_Compress_RGBA8( const ISPCTC_Surface_RGBA8* InputSurface, uint8_t* OutputBlocks )
+{
+	ispc::BC1_Compress_RGBA8( (ispc::Surface_RGBA8*)InputSurface, OutputBlocks );
+}
+void ISPCTC_BC1_Compress_RGBA16( const ISPCTC_Surface_RGBA16* InputSurface, uint8_t* OutputBlocks )
+{
+	ispc::BC1_Compress_RGBA16( (ispc::Surface_RGBA16*)InputSurface, OutputBlocks );
+}
 //void ISPCTC_BC1_Compress_RGBA32F( const ISPCTC_Surface_RGBA32F* InputSurface, uint8_t* OutputBlocks );
+//{
+//	ispc::BC1_Compress_RGBA32F( (ispc::Surface_RGBA32F*)InputSurface, OutputBlocks );
+//}
 
 // BC2.
-void ISPCTC_BC2_Compress_RGBA8( const ISPCTC_Surface_RGBA8* InputSurface, uint8_t* RawOutput )
+void CompressBlocksBC2( const rgba_surface* InputSurface, uint8_t* OutputBlocks )
 {
-	ispc::CompressBlocksBC2_ispc((ispc::rgba_surface*)InputSurface, RawOutput );
+	ISPCTC_BC2_Compress_RGBA8( (const ISPCTC_Surface_RGBA8*)InputSurface, OutputBlocks );
 }
-//void ISPCTC_BC2_Compress_RGBA16( const ISPCTC_Surface_RGBA16* InputSurface, uint8_t* OutputBlocks );
+void ISPCTC_BC2_Compress_RGBA8( const ISPCTC_Surface_RGBA8* InputSurface, uint8_t* OutputBlocks )
+{
+	ispc::BC2_Compress_RGBA8( (ispc::Surface_RGBA8*)InputSurface, OutputBlocks );
+}
+void ISPCTC_BC2_Compress_RGBA16( const ISPCTC_Surface_RGBA16* InputSurface, uint8_t* OutputBlocks )
+{
+	ispc::BC2_Compress_RGBA16( (ispc::Surface_RGBA16*)InputSurface, OutputBlocks );
+}
 //void ISPCTC_BC2_Compress_RGBA32F( const ISPCTC_Surface_RGBA32F* InputSurface, uint8_t* OutputBlocks );
+//{
+//	ispc::BC2_Compress_RGBA32F( (ispc::Surface_RGBA32F*)InputSurface, OutputBlocks );
+//}
 
 // BC3.
-void ISPCTC_BC3_Compress_RGBA8( const ISPCTC_Surface_RGBA8* InputSurface, uint8_t* RawOutput )
+void CompressBlocksBC3( const rgba_surface* InputSurface, uint8_t* OutputBlocks )
 {
-	ispc::CompressBlocksBC3_ispc( (ispc::rgba_surface*)InputSurface, RawOutput );
+	ISPCTC_BC3_Compress_RGBA8( (const ISPCTC_Surface_RGBA8*)InputSurface, OutputBlocks );
 }
-//void ISPCTC_BC3_Compress_RGBA16( const ISPCTC_Surface_RGBA16* InputSurface, uint8_t* OutputBlocks );
-//void ISPCTC_BC3_Compress_RGBA32F( const ISPCTC_Surface_RGBA32F* InputSurface, uint8_t* OutputBlocks );
+void ISPCTC_BC3_Compress_RGBA8( const ISPCTC_Surface_RGBA8* InputSurface, uint8_t* OutputBlocks )
+{
+	ispc::BC3_Compress_RGBA8( (ispc::Surface_RGBA8*)InputSurface, OutputBlocks );
+}
+void ISPCTC_BC3_Compress_RGBA16( const ISPCTC_Surface_RGBA16* InputSurface, uint8_t* OutputBlocks )
+{
+	ispc::BC3_Compress_RGBA16( (ispc::Surface_RGBA16*)InputSurface, OutputBlocks );
+}
+//void ISPCTC_BC3_Compress_RGBA32F( const ISPCTC_Surface_RGBA32F* InputSurface, uint8_t* OutputBlocks )
+//{
+//	ispc::BC3_Compress_RGBA32F( (ispc::Surface_RGBA32F*)InputSurface, OutputBlocks );
+//}
 
 // BC4.
-void ISPCTC_BC4_Compress_R8( const ISPCTC_Surface_R8* InputSurface, uint8_t* RawOutput )
+void CompressBlocksBC4( const red_surface* InputSurface, uint8_t* OutputBlocks )
 {
-	ispc::CompressBlocksBC4_ispc( (ispc::red_surface*)InputSurface, RawOutput );
+	ISPCTC_BC4_Compress_R8( (const ISPCTC_Surface_R8*)InputSurface, OutputBlocks );
 }
-//void ISPCTC_BC4_Compress_R16( const ISPCTC_Surface_R16* InputSurface, uint8_t* OutputBlocks );
-//void ISPCTC_BC4_Compress_R32F( const ISPCTC_Surface_R32F* InputSurface, uint8_t* OutputBlocks );
+void ISPCTC_BC4_Compress_R8( const ISPCTC_Surface_R8* InputSurface, uint8_t* OutputBlocks )
+{
+	ispc::BC4_Compress_R8( (ispc::Surface_R8*)InputSurface, OutputBlocks );
+}
+void ISPCTC_BC4_Compress_R16( const ISPCTC_Surface_R16* InputSurface, uint8_t* OutputBlocks )
+{
+	ispc::BC4_Compress_R16( (ispc::Surface_R16*)InputSurface, OutputBlocks );
+}
+//void ISPCTC_BC4_Compress_R32F( const ISPCTC_Surface_R32F* InputSurface, uint8_t* OutputBlocks )
+//{
+//	ispc::BC4_Compress_R32F( (ispc::Surface_R32F*)InputSurface, OutputBlocks );
+//}
 //void ISPCTC_BC4_CompressSigned_R8S( const ISPCTC_Surface_R8S* InputSurface, uint8_t* OutputBlocks );
 //void ISPCTC_BC4_CompressSigned_R16S( const ISPCTC_Surface_R16S* InputSurface, uint8_t* OutputBlocks );
 //void ISPCTC_BC4_CompressSigned_R32F( const ISPCTC_Surface_R32F* InputSurface, uint8_t* OutputBlocks );
 
 // BC5.
-void ISPCTC_BC5_Compress_RG8( const ISPCTC_Surface_RG8* InputSurface, uint8_t* RawOutput )
+void CompressBlocksBC5( const rg_surface* InputSurface, uint8_t* OutputBlocks )
 {
-	ispc::CompressBlocksBC5_ispc( (ispc::rg_surface*)InputSurface, RawOutput );
+	ISPCTC_BC5_Compress_RG8( (const ISPCTC_Surface_RG8*)InputSurface, OutputBlocks );
 }
-//void ISPCTC_BC5_Compress_R16( const ISPCTC_Surface_RG16* InputSurface, uint8_t* OutputBlocks );
-//void ISPCTC_BC5_Compress_R32F( const ISPCTC_Surface_RG32F* InputSurface, uint8_t* OutputBlocks );
+void ISPCTC_BC5_Compress_RG8( const ISPCTC_Surface_RG8* InputSurface, uint8_t* OutputBlocks )
+{
+	ispc::BC5_Compress_RG8( (ispc::Surface_RG8*)InputSurface, OutputBlocks );
+}
+void ISPCTC_BC5_Compress_RG16( const ISPCTC_Surface_RG16* InputSurface, uint8_t* OutputBlocks )
+{
+	ispc::BC5_Compress_RG16( (ispc::Surface_RG16*)InputSurface, OutputBlocks );
+}
+//void ISPCTC_BC5_Compress_RG32F( const ISPCTC_Surface_RG32F* InputSurface, uint8_t* OutputBlocks )
+//{
+//	ispc::BC5_Compress_RG32F( (ispc::Surface_RG32F*)InputSurface, OutputBlocks );
+//}
 //void ISPCTC_BC5_CompressSigned_R8S( const ISPCTC_Surface_RG8S* InputSurface, uint8_t* OutputBlocks );
 //void ISPCTC_BC5_CompressSigned_R16S( const ISPCTC_Surface_RG16S* InputSurface, uint8_t* OutputBlocks );
 //void ISPCTC_BC5_CompressSigned_R32F( const ISPCTC_Surface_RG32F* InputSurface, uint8_t* OutputBlocks );
 
 // BC6H.
-void ISPCTC_BC6H_Compress_RGBA16F( const ISPCTC_Surface_RGBA16F* InputSurface, uint8_t* RawOutput, bc6h_enc_settings* EncSettings )
+void CompressBlocksBC6H( const rgba_surface* InputSurface, uint8_t* OutputBlocks, bc6h_enc_settings* EncSettings )
 {
-	ispc::CompressBlocksBC6H_ispc( (ispc::rgba_surface*)InputSurface, RawOutput, (ispc::bc6h_enc_settings*)EncSettings );
+	ISPCTC_BC6H_Compress_RGBA16F( (const ISPCTC_Surface_RGBA16F*)InputSurface, OutputBlocks, EncSettings );
+}
+void ISPCTC_BC6H_Compress_RGBA16F( const ISPCTC_Surface_RGBA16F* InputSurface, uint8_t* OutputBlocks, bc6h_enc_settings* EncSettings )
+{
+	ispc::CompressBlocksBC6H_ispc( (ispc::rgba_surface*)InputSurface, OutputBlocks, (ispc::bc6h_enc_settings*)EncSettings );
 }
 //void ISPCTC_BC6H_Compress_RGBA32F( const ISPCTC_Surface_RGBA32F* InputSurface, uint8_t* OutputBlocks, bc6h_enc_settings* EncSettings );
 //void ISPCTC_BC6H_CompressSigned_RGBA16F( const ISPCTC_Surface_RGBA16F* InputSurface, uint8_t* OutputBlocks, bc6h_enc_settings* EncSettings );
 //void ISPCTC_BC6H_CompressSigned_RGBA32F( const ISPCTC_Surface_RGBA32F* InputSurface, uint8_t* OutputBlocks, bc6h_enc_settings* EncSettings );
 
 // BC7.
-void ISPCTC_BC7_Compress_RGBA8( const ISPCTC_Surface_RGBA8* InputSurface, uint8_t* RawOutput, bc7_enc_settings* EncSettings )
+void CompressBlocksBC7( const rgba_surface* InputSurface, uint8_t* OutputBlocks, bc7_enc_settings* EncSettings )
 {
-	ispc::CompressBlocksBC7_ispc( (ispc::rgba_surface*)InputSurface, RawOutput, (ispc::bc7_enc_settings*)EncSettings );
+	ISPCTC_BC7_Compress_RGBA8( (const ISPCTC_Surface_RGBA8*)InputSurface, OutputBlocks, EncSettings);
 }
-//void ISPCTC_BC7_Compress_RGBA16( const ISPCTC_Surface_RGBA16* InputSurface, uint8_t* OutputBlocks, bc7_enc_settings* EncSettings );
+void ISPCTC_BC7_Compress_RGBA8( const ISPCTC_Surface_RGBA8* InputSurface, uint8_t* OutputBlocks, bc7_enc_settings* EncSettings )
+{
+	ispc::BC7_Compress_RGBA8( (ispc::Surface_RGBA8*)InputSurface, OutputBlocks, (ispc::bc7_enc_settings*)EncSettings );
+}
+void ISPCTC_BC7_Compress_RGBA16( const ISPCTC_Surface_RGBA16* InputSurface, uint8_t* OutputBlocks, bc7_enc_settings* EncSettings )
+{
+	ispc::BC7_Compress_RGBA16( (ispc::Surface_RGBA16*)InputSurface, OutputBlocks, (ispc::bc7_enc_settings*)EncSettings );
+}
 //void ISPCTC_BC7_Compress_RGBA32F( const ISPCTC_Surface_RGBA32F* InputSurface, uint8_t* OutputBlocks, bc7_enc_settings* EncSettings );
+//{
+//	ispc::ETC1_BC7_Compress_RGBA32F( (ispc::Surface_RGBA32F*)InputSurface, OutputBlocks, (ispc::bc7_enc_settings*)EncSettings );
+//}
 
 // ETC1.
-void ISPCTC_ETC1_Compress_RGBA8( const ISPCTC_Surface_RGBA8* InputSurface, uint8_t* RawOutput, etc_enc_settings* EncSettings )
+void CompressBlocksETC1( const rgba_surface* InputSurface, uint8_t* OutputBlocks, etc_enc_settings* EncSettings )
 {
-	ispc::CompressBlocksETC1_ispc( (ispc::rgba_surface*)InputSurface, RawOutput, (ispc::etc_enc_settings*)EncSettings );
+	ISPCTC_ETC1_Compress_RGBA8( (const ISPCTC_Surface_RGBA8*)InputSurface, OutputBlocks, EncSettings );
 }
-//void ISPCTC_ETC1_Compress_RGBA16( const ISPCTC_Surface_RGBA16* InputSurface, uint8_t* OutputBlocks, etc_enc_settings* EncSettings );
+void ISPCTC_ETC1_Compress_RGBA8( const ISPCTC_Surface_RGBA8* InputSurface, uint8_t* OutputBlocks, etc_enc_settings* EncSettings )
+{
+	ispc::ETC1_Compress_RGBA8( (ispc::Surface_RGBA8*)InputSurface, OutputBlocks, (ispc::etc_enc_settings*)EncSettings );
+}
+void ISPCTC_ETC1_Compress_RGBA16( const ISPCTC_Surface_RGBA16* InputSurface, uint8_t* OutputBlocks, etc_enc_settings* EncSettings )
+{
+	ispc::ETC1_Compress_RGBA16( (ispc::Surface_RGBA16*)InputSurface, OutputBlocks, (ispc::etc_enc_settings*)EncSettings );
+}
 //void ISPCTC_ETC1_Compress_RGBA32F( const ISPCTC_Surface_RGBA32F* InputSurface, uint8_t* OutputBlocks, etc_enc_settings* EncSettings );
+//{
+//	ispc::ETC1_Compress_RGBA32F( (ispc::Surface_RGBA32F*)InputSurface, OutputBlocks, (ispc::etc_enc_settings*)EncSettings );
+//}
