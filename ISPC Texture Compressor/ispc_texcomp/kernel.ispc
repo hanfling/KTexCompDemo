@@ -345,6 +345,13 @@ inline void CompressBlockBC1_core(float block[48], uint32 data[2])
 	data[1] = fix_qbits(data[1]);
 }
 
+///////////////////////////////////////////////////////////
+// BC2 quantization routine.
+//
+// BC2 stores a 4 bit unsigned normalized integer for each alpha value.
+//
+
+// Maps alpha values into [0,15] and rounds to nearest integer.
 inline void QuantizeBlockBC2_alpha( float AlphaInput[16], uint32 AlphaOutput[2] )
 {
 	int32 Rows[4];
@@ -361,45 +368,105 @@ inline void QuantizeBlockBC2_alpha( float AlphaInput[16], uint32 AlphaOutput[2] 
 	AlphaOutput[1] = (Rows[2]<<0) | (Rows[3]<<16);
 }
 
-// FIX-ME: Constant color blocks allegedly can cause issues.
-inline void CompressBlockBC3_alpha(float block[16], uint32 data[2])
+
+///////////////////////////////////////////////////////////
+// BC3 alpha/BC4/BC5 compression routine.
+//
+// References:
+//  https://www.khronos.org/registry/OpenGL/extensions/EXT/EXT_texture_compression_s3tc.txt
+//  https://www.khronos.org/registry/OpenGL/extensions/ARB/ARB_texture_compression_rgtc.txt
+//  https://msdn.microsoft.com/de-de/library/windows/desktop/bb694531(v=vs.85).aspx
+//
+// The format stores two 1 byte integer endpoints (alpha_0 and alpha) which are used to 
+// create a 3-bit/8 value palette. It offers two modes which are selected depending on 
+// whether alpha_0 > alpha_1.
+//
+// The endpoints are followed by 16 3-bit values for each pixel.
+// 
+// The endpoints are signed/unsigned byte depending on whether the format is either
+// signed or unsigned. The BC3 alpha is regarded as unsigned.
+//
+// Depending on mode, folowing values are used for the palette (code taken off above msdn link):
+//
+// if( alpha_0 > alpha_1 )
+// {
+//   // 6 interpolated alpha values.
+//   alpha_2 = 6/7*alpha_0 + 1/7*alpha_1; // bit code 010
+//   alpha_3 = 5/7*alpha_0 + 2/7*alpha_1; // bit code 011
+//   alpha_4 = 4/7*alpha_0 + 3/7*alpha_1; // bit code 100
+//   alpha_5 = 3/7*alpha_0 + 4/7*alpha_1; // bit code 101
+//   alpha_6 = 2/7*alpha_0 + 5/7*alpha_1; // bit code 110
+//   alpha_7 = 1/7*alpha_0 + 6/7*alpha_1; // bit code 111
+// }
+// else
+// {
+//   // 4 interpolated alpha values.
+//   alpha_2 = 4/5*alpha_0 + 1/5*alpha_1; // bit code 010
+//   alpha_3 = 3/5*alpha_0 + 2/5*alpha_1; // bit code 011
+//   alpha_4 = 2/5*alpha_0 + 3/5*alpha_1; // bit code 100
+//   alpha_5 = 1/5*alpha_0 + 4/5*alpha_1; // bit code 101
+//   alpha_6 = 0.0;                       // bit code 110, for an unsigned format
+//   alpha_6 =-1.0;                       // bit code 110, for a signed format
+//   alpha_7 = 1.0;                       // bit code 111
+// }
+//
+// In either of them:
+//   bit code 000 will be alpha_0
+//   bit code 001 will be alpha_1
+//
+
+inline void CompressBlockBC3_alpha( float AlphaInput[16], uint32 AlphaOutput[2] )
 {
-	float ep[2] = { 255, 0 };
-	
-	for (uniform int k=0; k<16; k++)
+	float MinValue = 255;
+	float MaxValue = 0;
+
+	// Find min and max float values in block.
+	for ( uniform int k=0; k<16; k++ )
 	{
-		ep[0] = min(ep[0], block[k]);
-		ep[1] = max(ep[1], block[k]);
+		MinValue = min( MinValue, AlphaInput[k] );
+		MaxValue = max( MaxValue, AlphaInput[k] );
 	}
-    
-	if (ep[0] == ep[1])
-		ep[1] = ep[0]+0.1f;
-	    
-	uint32 qblock[2] = { 0, 0 };
-	float scale = 7f/(ep[1]-ep[0]);
 
-	for (uniform int k=0; k<16; k++)
+	// Pick endpoints beeing integer values in [0,255].
+	float Endpoints[2];
+	Endpoints[0] = min(ceil(MaxValue),255f); // alpha_0.
+	Endpoints[1] = max(0f,floor(MinValue));  // alpha_1.
+
+	// Make sure alpha0 > alpha1 to stay in the same mode.
+	if ( Endpoints[0]==Endpoints[1] )
 	{
-		float v = block[k];
-		float proj = (v-ep[0])*scale+0.5f;
+		if ( Endpoints[0]<255f )
+			Endpoints[0] += 1f;
+		else
+			Endpoints[1] -= 1f;
+	}
 
-		int q = clamp((int)proj, 0, 7);
+	uint32 qblock[2] = { 0, 0 }; // Stores 24-bit/8 indices per element.
+	float scale = 7f/(Endpoints[0]-Endpoints[1]);
 
+	for ( uniform int k=0; k<16; k++ )
+	{
+		// Projection into [alpha_1,alpha_0], so that: alpha = q/7*alpha_0 + (7-q)/7*alpha_1
+		float v = AlphaInput[k];
+		float proj = (v-Endpoints[1])*scale+0.5f; // Maybe round instead?
+		int q = clamp( (int)proj, 0, 7 );
+
+		// Remap projection ordering into alpha_0 > alpha_1 mode ordering.
 		q = 7-q;
-
 		if (q > 0)
 			q++;
 		if (q==8)
 			q = 1;
 
+		// Set index aside.
 		qblock[k/8] |= q << ((k%8)*3);
 	}
 
 	// (could be improved by refinement)
-	data[0] = clamp((int)ep[0], 0, 255)*256+clamp((int)ep[1], 0, 255);
-	data[0] |= qblock[0]<<16;
-	data[1] = qblock[0]>>16;
-	data[1] |= qblock[1]<<8;
+	AlphaOutput[0]  = clamp((int)Endpoints[0],0,255) + clamp((int)Endpoints[1],0,255)*256;
+	AlphaOutput[0] |= qblock[0]<<16;
+	AlphaOutput[1]  = qblock[0]>>16;
+	AlphaOutput[1] |= qblock[1]<<8;
 }
 
 
