@@ -8,6 +8,12 @@ DYNAMIC_LIBRARY = build/libispc_texcomp.so
 OBJS = ispc_texcomp/kernel_astc_ispc.o \
 ispc_texcomp/kernel_astc_ispc_sse2.o \
 ispc_texcomp/kernel_astc_ispc_avx.o \
+ispc_texcomp/kernel_etc_ispc.o \
+ispc_texcomp/kernel_etc_ispc_sse2.o \
+ispc_texcomp/kernel_etc_ispc_avx.o \
+ispc_texcomp/kernel_bptc_ispc.o \
+ispc_texcomp/kernel_bptc_ispc_sse2.o \
+ispc_texcomp/kernel_bptc_ispc_avx.o \
 ispc_texcomp/kernel_ispc.o \
 ispc_texcomp/kernel_ispc_sse2.o \
 ispc_texcomp/kernel_ispc_avx.o \
@@ -20,7 +26,7 @@ clean:
 	rm -f $(DYNAMIC_LIBRARY) $(OBJS) ispc_texcomp/kernel*ispc*.h
 
 # Force ispc targets to run before compiling the cpp that relies on their generated headers
-ispc_texcomp/ispc_texcomp.cpp : ispc_texcomp/kernel_ispc.o
+ispc_texcomp/ispc_texcomp.cpp : ispc_texcomp/kernel_ispc.o ispc_texcomp/kernel_etc_ispc.o ispc_texcomp/kernel_bptc_ispc.o
 ispc_texcomp/ispc_texcomp_astc.cpp : ispc_texcomp/kernel_astc_ispc.o
 
 # Simple "generate .o from .cpp using c++ compiler"
