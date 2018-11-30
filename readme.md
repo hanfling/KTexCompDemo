@@ -43,7 +43,7 @@ ISPC Texture Compressor is distributed under the [MIT License](https://opensourc
 ## Build Instructions
 
 * Warning:
-	*Using a later ispc version results at least libreary not running on AMD Phenom II on Windows 7. This may or may not be a configuration issue in this project.
+	* Using a later ispc version results at least libreary not running on AMD Phenom II on Windows 7. This may or may not be a configuration issue in this project.
 
 * Windows:
 	* Use Visual Studio 2012 on later, build solution or project files.
