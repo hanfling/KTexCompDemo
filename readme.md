@@ -42,11 +42,14 @@ ISPC Texture Compressor is distributed under the [MIT License](https://opensourc
 
 ## Build Instructions
 
+* Warning:
+	*Using a later ispc version results at least libreary not running on AMD Phenom II on Windows 7. This may or may not be a configuration issue in this project.
+
 * Windows:
 	* Use Visual Studio 2012 on later, build solution or project files.
 	* ISPC version 1.8.2 is included in this repo.
 
-* Mac OS X:
+* Mac OS X (outdated):
 	* Xcode project file included only for compressor itself, not for the examples.
 	* You'll need to get ISPC compiler version [1.8.2 build](https://sf.net/projects/ispcmirror) and put the compiler executable into `ISPC Texture Compressor/ispc_osx`.
 	* Use `ISPC Texture Compressor/ispc_texcomp.xcodeproj`, tested with Xcode 7.3.
