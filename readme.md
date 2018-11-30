@@ -27,7 +27,9 @@ Intel Developer Zone and the included [Technical Paper](./ISPC%20Texture%20Compr
 ## Limitations
 
 * Lack of notion about user intended colorspaces or compression metrics (sRGB is assumed for LDR input).
-* Half floating point input for BC6H and otherwise unsigned byte input only.
+* Limited input formats:
+	* BC6H requires clamped fp16 input.
+	* Otherwise 8 and 16 bit uint only.
 * Very basic support for BC3 alpha channel and BC4/BC5.
 * BC1 lacks punchthrough alpha support.
 * Only unsigned format of BC4/BC5/BC6H is supported.
