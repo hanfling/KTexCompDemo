@@ -1092,6 +1092,7 @@ int GetBytesPerBlock(CompressionFunc* fn)
         case DXGI_FORMAT_BC1_UNORM_SRGB:
             return 8;
 
+		case DXGI_FORMAT_BC2_UNORM_SRGB:
         case DXGI_FORMAT_BC3_UNORM_SRGB:
         case DXGI_FORMAT_BC7_UNORM_SRGB:
         case DXGI_FORMAT_BC6H_UF16:

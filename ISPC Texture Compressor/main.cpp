@@ -244,7 +244,7 @@ void InitApp()
     y = 0;
     gSampleUI.Init(&gDialogResourceManager);
     gSampleUI.SetCallback(OnGUIEvent);
-    gSampleUI.AddStatic(IDC_TEXT, L"", x, y, 1, 1); y += 6*22;
+    gSampleUI.AddStatic(IDC_TEXT, L"", x, y, 1, 1); y += 7*22;
     gSampleUI.AddComboBox(IDC_PROFILE, x, y, 226, 22); y += 26;
     gSampleUI.AddCheckBox(IDC_MT, L"Multithreaded", x, y, 125, 22, gMultithreaded);
     gSampleUI.AddButton(IDC_RECOMPRESS, L"Recompress", x + 131, y, 125, 22); y += 26;
@@ -496,13 +496,14 @@ void CALLBACK OnGUIEvent( UINT nEvent, int nControlID, CDXUTControl* pControl, v
             WCHAR wstr[MAX_PATH];
             swprintf_s(wstr, MAX_PATH,
                 L"Texture Size: %d x %d\n"
-                L"RGB PSNR: %.2f dB\n"
-                L"RGBA PSNR: %.2f dB\n"
+				L"RGB   PSNR: %.2f dB\n" 
+				L"RGBA  PSNR: %.2f dB\n" 
+				L"ALPHA PSNR: %.2f dB\n" 
                 L"Exposure: %.2f\n"
                 L"Compression Time: %0.2f ms\n"
                 L"Compression Rate: %0.2f Mp/s\n",
                 gTexWidth, gTexHeight,
-                gError, gError2,
+                gRGBError, gRGBAError, gAlphaError,
                 gLog2Exposure,
                 gCompTime, gCompRate);
             gSampleUI.GetStatic(IDC_TEXT)->SetText(wstr);
