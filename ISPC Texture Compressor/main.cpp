@@ -203,16 +203,20 @@ int WINAPI wWinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdL
         comboBox->AddItem(L"BC6H basic", (void *)(CompressImageBC6H_basic));
         comboBox->AddItem(L"BC6H slow", (void *)(CompressImageBC6H_slow));
         comboBox->AddItem(L"BC6H veryslow", (void *)(CompressImageBC6H_veryslow));
+				comboBox->AddItem(L"BC6H developmment", (void *)(CompressImageBC6H_development));
         comboBox->AddItem(L"BC7 ultrafast (RGB)", (void *)(CompressImageBC7_ultrafast));
         comboBox->AddItem(L"BC7 veryfast (RGB)", (void *)(CompressImageBC7_veryfast));
         comboBox->AddItem(L"BC7 fast (RGB)", (void *)(CompressImageBC7_fast));
         comboBox->AddItem(L"BC7 basic (RGB)", (void *)(CompressImageBC7_basic));
         comboBox->AddItem(L"BC7 slow (RGB)", (void *)(CompressImageBC7_slow));
+				comboBox->AddItem(L"BC7 veryslow (RGB)", (void *)(CompressImageBC7_veryslow));
         comboBox->AddItem(L"BC7 alpha-ufast (RGBA)", (void *)(CompressImageBC7_alpha_ultrafast));
         comboBox->AddItem(L"BC7 alpha-vfast (RGBA)", (void *)(CompressImageBC7_alpha_veryfast));
         comboBox->AddItem(L"BC7 alpha-fast (RGBA)", (void *)(CompressImageBC7_alpha_fast));
         comboBox->AddItem(L"BC7 alpha-basic (RGBA)", (void *)(CompressImageBC7_alpha_basic));
         comboBox->AddItem(L"BC7 alpha-slow (RGBA)", (void *)(CompressImageBC7_alpha_slow));
+				comboBox->AddItem(L"BC7 alpha-vslow (RGBA)", (void *)(CompressImageBC7_alpha_veryslow));
+				comboBox->AddItem(L"BC7 developmment", (void *)(CompressImageBC7_development));
     }
 
     SetCompressionFunc(CompressImageBC1);
@@ -235,9 +239,10 @@ void InitApp()
     int y = 10;
     gHUD.Init(&gDialogResourceManager);
     gHUD.SetCallback(OnGUIEvent);
-    gHUD.AddButton(IDC_TOGGLEFULLSCREEN, L"Toggle full screen", x, y, 170, 23);
-    gHUD.AddButton(IDC_TOGGLEREF, L"Toggle REF (F3)", x, y += 26, 170, 23, VK_F3);
-    gHUD.AddButton(IDC_CHANGEDEVICE, L"Change device (F2)", x, y += 26, 170, 23, VK_F2);
+		// !! All these crash.
+    //gHUD.AddButton(IDC_TOGGLEFULLSCREEN, L"Toggle full screen", x, y, 170, 23);
+    //gHUD.AddButton(IDC_TOGGLEREF, L"Toggle REF (F3)", x, y += 26, 170, 23, VK_F3);
+    //gHUD.AddButton(IDC_CHANGEDEVICE, L"Change device (F2)", x, y += 26, 170, 23, VK_F2);
     gHUD.SetSize( 170, 170 );
 
     x = 0;
@@ -258,8 +263,9 @@ void InitApp()
 
     {
         CDXUTComboBox *comboBox = gSampleUI.GetComboBox(IDC_PROFILE);
+				comboBox->SetDropHeight( 400 );
         comboBox->AddItem(L"BC1 (RGB)", (void *)(CompressImageBC1));
-        //comboBox->AddItem(L"BC1 (RGBA)", (void *)(CompressImageBC1a));
+        //comboBox->AddItem(L"BC1a (RGBA)", (void *)(CompressImageBC1a));
         comboBox->AddItem(L"BC2 (RGBA)", (void *)(CompressImageBC2));
         comboBox->AddItem(L"BC3 (RGBA)", (void *)(CompressImageBC3));
         // Other options only added after D3D device created if DX11 available

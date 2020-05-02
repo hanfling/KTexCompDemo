@@ -1107,7 +1107,8 @@ bool IsBC6H(CompressionFunc* fn)
         fn == CompressImageBC6H_fast ||
         fn == CompressImageBC6H_basic ||
         fn == CompressImageBC6H_slow ||
-        fn == CompressImageBC6H_veryslow;
+        fn == CompressImageBC6H_veryslow ||
+        fn == CompressImageBC6H_development;
 }
 
 DXGI_FORMAT GetFormatFromCompressionFunc(CompressionFunc* fn)
@@ -1149,6 +1150,7 @@ DECLARE_CompressImageBC6H_profile(fast);
 DECLARE_CompressImageBC6H_profile(basic);
 DECLARE_CompressImageBC6H_profile(slow);
 DECLARE_CompressImageBC6H_profile(veryslow);
+DECLARE_CompressImageBC6H_profile(development);
 
 #define DECLARE_CompressImageBC7_profile(profile)                               \
 void CompressImageBC7_ ## profile(const rgba_surface* input, BYTE* output)      \
@@ -1163,8 +1165,11 @@ DECLARE_CompressImageBC7_profile(veryfast);
 DECLARE_CompressImageBC7_profile(fast);
 DECLARE_CompressImageBC7_profile(basic);
 DECLARE_CompressImageBC7_profile(slow);
+DECLARE_CompressImageBC7_profile(veryslow);
 DECLARE_CompressImageBC7_profile(alpha_ultrafast);
 DECLARE_CompressImageBC7_profile(alpha_veryfast);
 DECLARE_CompressImageBC7_profile(alpha_fast);
 DECLARE_CompressImageBC7_profile(alpha_basic);
 DECLARE_CompressImageBC7_profile(alpha_slow);
+DECLARE_CompressImageBC7_profile(alpha_veryslow);
+DECLARE_CompressImageBC7_profile(development);

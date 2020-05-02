@@ -3,6 +3,7 @@
 
 # ISPC-generated headers
 *_ispc*.h
+.vs/
 
 # User-specific files
 *.suo
